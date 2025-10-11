@@ -1,0 +1,227 @@
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Check, QrCode } from "lucide-react"
+
+export default function PricingPage() {
+  const plans = [
+    {
+      name: "Starter",
+      price: "$9",
+      description: "Perfect for small cafes and food trucks",
+      features: [
+        "Up to 50 menu items",
+        "1 QR code",
+        "Basic customization",
+        "Mobile-optimized menu",
+        "Real-time updates",
+        "Email support",
+      ],
+      cta: "Start Free Trial",
+      popular: false,
+    },
+    {
+      name: "Professional",
+      price: "$29",
+      description: "Ideal for restaurants and bars",
+      features: [
+        "Unlimited menu items",
+        "5 QR codes",
+        "Advanced customization",
+        "Mobile-optimized menu",
+        "Real-time updates",
+        "Priority support",
+        "Custom branding",
+        "Analytics dashboard",
+      ],
+      cta: "Start Free Trial",
+      popular: true,
+    },
+    {
+      name: "Enterprise",
+      price: "$99",
+      description: "For restaurant chains and franchises",
+      features: [
+        "Unlimited everything",
+        "Unlimited QR codes",
+        "White-label solution",
+        "Multi-location support",
+        "API access",
+        "Dedicated account manager",
+        "Custom integrations",
+        "Advanced analytics",
+      ],
+      cta: "Contact Sales",
+      popular: false,
+    },
+  ]
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-background to-secondary/30">
+      {/* Header */}
+      <header className="border-b bg-background/95 backdrop-blur-sm sticky top-0 z-10 animate-in fade-in slide-in-from-top-4 duration-700">
+        <div className="container mx-auto px-4 py-4 max-w-7xl">
+          <div className="flex items-center justify-between">
+            <Link href="/" className="flex items-center gap-3">
+              <div className="bg-primary p-2 rounded-lg">
+                <QrCode className="w-5 h-5 text-primary-foreground" />
+              </div>
+              <span className="text-xl font-bold">QR Menu</span>
+            </Link>
+            <div className="flex gap-3">
+              <Link href="/sign-in">
+                <Button variant="ghost">Sign In</Button>
+              </Link>
+              <Link href="/sign-up">
+                <Button>Get Started</Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Hero */}
+      <section className="container mx-auto px-4 py-20 max-w-7xl">
+        <div className="text-center space-y-6 max-w-3xl mx-auto animate-in fade-in slide-in-from-bottom-8 duration-1000">
+          <h1 className="text-5xl font-bold leading-tight text-balance">Simple, Transparent Pricing</h1>
+          <p className="text-xl text-muted-foreground leading-relaxed">
+            Choose the perfect plan for your restaurant. All plans include a 14-day free trial.
+          </p>
+        </div>
+      </section>
+
+      {/* Pricing Cards */}
+      <section className="container mx-auto px-4 pb-20 max-w-7xl">
+        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          {plans.map((plan, index) => (
+            <Card
+              key={plan.name}
+              className={`relative flex flex-col animate-in fade-in slide-in-from-bottom-8 duration-700 ${
+                plan.popular ? "border-primary shadow-lg scale-105" : ""
+              }`}
+              style={{ animationDelay: `${index * 150}ms` }}
+            >
+              {plan.popular && (
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                  <span className="bg-primary text-primary-foreground text-sm font-semibold px-4 py-1 rounded-full">
+                    Most Popular
+                  </span>
+                </div>
+              )}
+
+              <CardHeader className="text-center pb-8 pt-8">
+                <CardTitle className="text-2xl mb-2">{plan.name}</CardTitle>
+                <CardDescription className="text-base">{plan.description}</CardDescription>
+                <div className="mt-6">
+                  <span className="text-5xl font-bold">{plan.price}</span>
+                  <span className="text-muted-foreground">/month</span>
+                </div>
+              </CardHeader>
+
+              <CardContent className="flex-1">
+                <ul className="space-y-3">
+                  {plan.features.map((feature) => (
+                    <li key={feature} className="flex items-start gap-3">
+                      <div className="bg-primary/10 rounded-full p-1 mt-0.5">
+                        <Check className="w-4 h-4 text-primary" />
+                      </div>
+                      <span className="text-sm leading-relaxed">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+
+              <CardFooter className="pt-6">
+                <Link href="/sign-up" className="w-full">
+                  <Button className="w-full" variant={plan.popular ? "default" : "outline"} size="lg">
+                    {plan.cta}
+                  </Button>
+                </Link>
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="container mx-auto px-4 py-20 max-w-7xl">
+        <div className="max-w-3xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <h2 className="text-3xl font-bold text-center mb-12">Frequently Asked Questions</h2>
+
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Can I change plans later?</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground leading-relaxed">
+                  Yes! You can upgrade or downgrade your plan at any time. Changes take effect immediately, and we'll
+                  prorate any charges.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">What payment methods do you accept?</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground leading-relaxed">
+                  We accept all major credit cards (Visa, MasterCard, American Express) and PayPal for your convenience.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Is there a setup fee?</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground leading-relaxed">
+                  No setup fees! You only pay the monthly subscription price. Start your 14-day free trial with no
+                  credit card required.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Can I cancel anytime?</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground leading-relaxed">
+                  Absolutely. Cancel your subscription at any time with no penalties. Your menu will remain active until
+                  the end of your billing period.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="container mx-auto px-4 py-20 max-w-7xl">
+        <Card className="bg-primary text-primary-foreground animate-in fade-in zoom-in-95 duration-700">
+          <CardContent className="p-12 text-center space-y-6">
+            <h2 className="text-3xl font-bold">Ready to Modernize Your Menu?</h2>
+            <p className="text-lg text-primary-foreground/90 max-w-2xl mx-auto leading-relaxed">
+              Start your 14-day free trial today. No credit card required.
+            </p>
+            <Link href="/sign-up">
+              <Button size="lg" variant="secondary" className="h-12 px-8 text-base">
+                Get Started Free
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t bg-background py-8">
+        <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
+          <p>© 2025 QR Menu. All rights reserved.</p>
+        </div>
+      </footer>
+    </div>
+  )
+}

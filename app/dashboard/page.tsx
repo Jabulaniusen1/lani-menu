@@ -1,8 +1,6 @@
 import { redirect } from "next/navigation"
 import { getSupabaseServerClient } from "@/lib/supabase/server"
-import { DashboardHeader } from "@/components/dashboard/dashboard-header"
-import { RestaurantSetup } from "@/components/dashboard/restaurant-setup"
-import { MenuManager } from "@/components/dashboard/menu-manager"
+import { DashboardClient } from "@/components/dashboard/dashboard-client"
 
 export default async function DashboardPage() {
   const supabase = await getSupabaseServerClient()
@@ -15,16 +13,23 @@ export default async function DashboardPage() {
     redirect("/sign-in")
   }
 
-  // Check if user has a restaurant
-  const { data: restaurant } = await supabase.from("restaurants").select("*").eq("user_id", user.id).single()
+  // Check if user has restaurants using the new function
+  const { data: restaurants, error: restaurantsError } = await supabase
+    .rpc('get_user_restaurants', { user_uuid: user.id })
+  
+  if (restaurantsError) {
+    console.error('Error fetching restaurants:', restaurantsError)
+  }
+  
+  console.log('Restaurants data from database:', restaurants)
+
+  // Get primary restaurant for header (or first restaurant)
+  const primaryRestaurant = restaurants?.find((r: any) => r.is_primary) || restaurants?.[0] || null
 
   return (
-    <div className="min-h-screen bg-secondary/30">
-      <DashboardHeader user={user} restaurant={restaurant} />
-
-      <main className="container mx-auto px-4 py-8 max-w-7xl">
-        {!restaurant ? <RestaurantSetup userId={user.id} /> : <MenuManager restaurant={restaurant} />}
-      </main>
-    </div>
+    <DashboardClient 
+      initialUser={user} 
+      initialRestaurants={restaurants || []} 
+    />
   )
 }

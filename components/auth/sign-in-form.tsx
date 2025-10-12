@@ -8,12 +8,15 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { getSupabaseBrowserClient } from "@/lib/supabase/client"
-import { Loader2 } from "lucide-react"
+import { Loader2, Eye, EyeOff } from "lucide-react"
+import { useNotification } from "@/hooks/use-notification"
 
 export function SignInForm() {
   const router = useRouter()
+  const { notify } = useNotification()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -32,10 +35,13 @@ export function SignInForm() {
 
       if (signInError) throw signInError
 
+      notify.success("Signed in successfully!", "Welcome back to your dashboard")
       router.push("/dashboard")
       router.refresh()
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "An error occurred during sign in")
+      const errorMessage = err instanceof Error ? err.message : "An error occurred during sign in"
+      setError(errorMessage)
+      notify.error("Sign in failed", errorMessage)
     } finally {
       setLoading(false)
     }
@@ -65,16 +71,30 @@ export function SignInForm() {
               Forgot password?
             </button>
           </div>
-          <Input
-            id="password"
-            type="password"
-            placeholder="Enter your password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            disabled={loading}
-            className="h-11"
-          />
+          <div className="relative">
+            <Input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              placeholder="Enter your password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              disabled={loading}
+              className="h-11 pr-10"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              disabled={loading}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              {showPassword ? (
+                <EyeOff className="h-4 w-4" />
+              ) : (
+                <Eye className="h-4 w-4" />
+              )}
+            </button>
+          </div>
         </div>
       </div>
 

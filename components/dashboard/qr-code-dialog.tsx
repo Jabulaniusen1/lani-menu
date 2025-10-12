@@ -1,10 +1,10 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Download, Printer } from "lucide-react"
-import QRCodeStyling from "qr-code-styling"
+import QRCode from "qrcode"
 
 interface QRCodeDialogProps {
   open: boolean
@@ -14,60 +14,79 @@ interface QRCodeDialogProps {
 }
 
 export function QRCodeDialog({ open, onOpenChange, menuUrl, restaurantName }: QRCodeDialogProps) {
-  const qrCodeRef = useRef<HTMLDivElement>(null)
-  const qrCodeInstance = useRef<QRCodeStyling | null>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    if (open && qrCodeRef.current && !qrCodeInstance.current) {
-      qrCodeInstance.current = new QRCodeStyling({
-        width: 300,
-        height: 300,
-        data: menuUrl,
-        margin: 10,
-        qrOptions: {
-          typeNumber: 0,
-          mode: "Byte",
-          errorCorrectionLevel: "H",
-        },
-        imageOptions: {
-          hideBackgroundDots: true,
-          imageSize: 0.4,
-          margin: 8,
-        },
-        dotsOptions: {
-          color: "#f97316",
-          type: "rounded",
-        },
-        backgroundOptions: {
-          color: "#ffffff",
-        },
-        cornersSquareOptions: {
-          color: "#f97316",
-          type: "extra-rounded",
-        },
-        cornersDotOptions: {
-          color: "#f97316",
-          type: "dot",
-        },
-      })
-
-      qrCodeInstance.current.append(qrCodeRef.current)
+    if (open && menuUrl) {
+      generateQRCode()
     }
   }, [open, menuUrl])
 
-  const handleDownload = () => {
-    if (qrCodeInstance.current) {
-      qrCodeInstance.current.download({
-        name: `${restaurantName.toLowerCase().replace(/\s+/g, "-")}-menu-qr`,
-        extension: "png",
+  const generateQRCode = async () => {
+    if (!menuUrl) {
+      console.error('No menu URL provided')
+      return
+    }
+
+    setLoading(true)
+    try {
+      console.log('Generating QR code for URL:', menuUrl)
+      console.log('URL length:', menuUrl.length)
+      console.log('URL type:', typeof menuUrl)
+      
+      // Validate URL format
+      try {
+        new URL(menuUrl)
+        console.log('URL is valid')
+      } catch (urlError) {
+        console.error('Invalid URL format:', urlError)
+        throw new Error(`Invalid URL format: ${menuUrl}`)
+      }
+      
+      // Generate QR code as data URL
+      const dataUrl = await QRCode.toDataURL(menuUrl, {
+        width: 300,
+        margin: 2,
+        color: {
+          dark: '#000000', // Black color
+          light: '#ffffff' // White background
+        },
+        errorCorrectionLevel: 'H'
       })
+      
+      console.log('QR code data URL generated:', dataUrl.substring(0, 50) + '...')
+      setQrDataUrl(dataUrl)
+      console.log('QR code generated successfully')
+    } catch (error) {
+      console.error('Error generating QR code:', error)
+      console.error('Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        menuUrl: menuUrl
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleDownload = () => {
+    if (qrDataUrl) {
+      const link = document.createElement('a')
+      link.download = `${restaurantName.toLowerCase().replace(/\s+/g, "-")}-menu-qr.png`
+      link.href = qrDataUrl
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
     }
   }
 
   const handlePrint = () => {
+    if (!qrDataUrl) return
+    
     const printWindow = window.open("", "_blank")
-    if (printWindow && qrCodeRef.current) {
-      const qrCodeHtml = qrCodeRef.current.innerHTML
+    if (printWindow) {
       printWindow.document.write(`
         <!DOCTYPE html>
         <html>
@@ -104,6 +123,10 @@ export function QRCodeDialog({ open, onOpenChange, menuUrl, restaurantName }: QR
                 border: 2px solid #e5e5e5;
                 border-radius: 16px;
               }
+              .qr-code img {
+                max-width: 300px;
+                height: auto;
+              }
               @media print {
                 body {
                   padding: 0;
@@ -116,7 +139,7 @@ export function QRCodeDialog({ open, onOpenChange, menuUrl, restaurantName }: QR
               <h1>${restaurantName}</h1>
               <p>Scan to view our digital menu</p>
               <div class="qr-code">
-                ${qrCodeHtml}
+                <img src="${qrDataUrl}" alt="QR Code" />
               </div>
             </div>
           </body>
@@ -139,7 +162,25 @@ export function QRCodeDialog({ open, onOpenChange, menuUrl, restaurantName }: QR
 
         <div className="space-y-6">
           <div className="flex justify-center bg-muted p-6 rounded-lg">
-            <div ref={qrCodeRef} />
+            {loading ? (
+              <div className="min-h-[300px] min-w-[300px] flex items-center justify-center">
+                <div className="text-muted-foreground text-sm">
+                  Generating QR code...
+                </div>
+              </div>
+            ) : qrDataUrl ? (
+              <img 
+                src={qrDataUrl} 
+                alt="QR Code" 
+                className="max-w-[300px] max-h-[300px]"
+              />
+            ) : (
+              <div className="min-h-[300px] min-w-[300px] flex items-center justify-center">
+                <div className="text-muted-foreground text-sm">
+                  Failed to generate QR code
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -147,14 +188,35 @@ export function QRCodeDialog({ open, onOpenChange, menuUrl, restaurantName }: QR
             <code className="text-xs bg-muted px-3 py-2 rounded border block break-all">{menuUrl}</code>
           </div>
 
-          <div className="flex gap-3">
-            <Button onClick={handleDownload} className="flex-1">
-              <Download className="w-4 h-4 mr-2" />
-              Download PNG
-            </Button>
-            <Button onClick={handlePrint} variant="outline" className="flex-1 bg-transparent">
-              <Printer className="w-4 h-4 mr-2" />
-              Print
+          <div className="space-y-3">
+            <div className="flex gap-3">
+              <Button 
+                onClick={handleDownload} 
+                className="flex-1" 
+                disabled={!qrDataUrl || loading}
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Download PNG
+              </Button>
+              <Button 
+                onClick={handlePrint} 
+                variant="outline" 
+                className="flex-1 bg-transparent"
+                disabled={!qrDataUrl || loading}
+              >
+                <Printer className="w-4 h-4 mr-2" />
+                Print
+              </Button>
+            </div>
+            
+            {/* Debug button - remove this after fixing */}
+            <Button 
+              onClick={generateQRCode} 
+              variant="outline" 
+              className="w-full"
+              disabled={loading}
+            >
+              {loading ? "Generating..." : "Retry QR Generation"}
             </Button>
           </div>
         </div>

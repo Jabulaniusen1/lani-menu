@@ -5,12 +5,14 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Search, UtensilsCrossed } from "lucide-react"
+import { formatPrice } from "@/lib/currency"
 
 interface Restaurant {
   id: string
   name: string
   description: string | null
   logo_url: string | null
+  currency: string
 }
 
 interface MenuItem {
@@ -57,9 +59,17 @@ export function PublicMenu({ restaurant, menuItems }: PublicMenuProps) {
         <div className="container mx-auto px-4 py-6 max-w-4xl">
           <div className="text-center space-y-2">
             <div className="flex items-center justify-center gap-3 mb-2">
-              <div className="bg-primary p-2 rounded-lg">
-                <UtensilsCrossed className="w-6 h-6 text-primary-foreground" />
-              </div>
+              {restaurant.logo_url ? (
+                <img
+                  src={restaurant.logo_url}
+                  alt={`${restaurant.name} logo`}
+                  className="w-12 h-12 object-contain rounded-lg"
+                />
+              ) : (
+                <div className="bg-primary p-2 rounded-lg">
+                  <UtensilsCrossed className="w-6 h-6 text-primary-foreground" />
+                </div>
+              )}
             </div>
             <h1 className="text-3xl font-bold text-balance">{restaurant.name}</h1>
             {restaurant.description && (
@@ -106,14 +116,23 @@ export function PublicMenu({ restaurant, menuItems }: PublicMenuProps) {
                   {groupedItems[category].map((item) => (
                     <Card key={item.id} className="hover:shadow-md transition-shadow">
                       <CardContent className="p-5">
-                        <div className="flex items-start justify-between gap-4">
+                        <div className="flex items-start gap-4">
+                          {item.image_url && (
+                            <div className="w-20 h-20 shrink-0">
+                              <img
+                                src={item.image_url}
+                                alt={item.name}
+                                className="w-full h-full object-cover rounded-lg"
+                              />
+                            </div>
+                          )}
                           <div className="flex-1 min-w-0 space-y-1">
                             <h3 className="text-lg font-semibold leading-tight">{item.name}</h3>
                             {item.description && (
                               <p className="text-sm text-muted-foreground leading-relaxed">{item.description}</p>
                             )}
                           </div>
-                          <div className="text-xl font-bold text-primary shrink-0">${item.price.toFixed(2)}</div>
+                          <div className="text-xl font-bold text-primary shrink-0">{formatPrice(item.price, restaurant.currency)}</div>
                         </div>
                       </CardContent>
                     </Card>

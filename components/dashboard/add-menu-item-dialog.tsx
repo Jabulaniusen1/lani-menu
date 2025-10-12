@@ -9,7 +9,10 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { FileUpload } from "@/components/ui/file-upload"
 import { getSupabaseBrowserClient } from "@/lib/supabase/client"
+import { uploadFile, generateFilePath, generateMenuFilePath } from "@/lib/storage"
+import { useNotification } from "@/hooks/use-notification"
 import { Loader2 } from "lucide-react"
 
 interface AddMenuItemDialogProps {
@@ -22,10 +25,12 @@ interface AddMenuItemDialogProps {
 const CATEGORIES = ["appetizers", "mains", "desserts", "drinks", "sides", "specials"]
 
 export function AddMenuItemDialog({ open, onOpenChange, restaurantId, onSuccess }: AddMenuItemDialogProps) {
+  const { notify } = useNotification()
   const [name, setName] = useState("")
   const [description, setDescription] = useState("")
   const [price, setPrice] = useState("")
   const [category, setCategory] = useState("")
+  const [imageFile, setImageFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -36,6 +41,19 @@ export function AddMenuItemDialog({ open, onOpenChange, restaurantId, onSuccess 
 
     try {
       const supabase = getSupabaseBrowserClient()
+      let imageUrl: string | null = null
+
+      // Upload image if provided
+      if (imageFile) {
+        const filePath = generateMenuFilePath(restaurantId, imageFile.name)
+        const { url, error: uploadError } = await uploadFile(imageFile, "menu-assets", filePath)
+        
+        if (uploadError) {
+          throw new Error(`Failed to upload image: ${uploadError}`)
+        }
+        
+        imageUrl = url
+      }
 
       const { error: insertError } = await supabase.from("menu_items").insert({
         restaurant_id: restaurantId,
@@ -43,6 +61,7 @@ export function AddMenuItemDialog({ open, onOpenChange, restaurantId, onSuccess 
         description: description || null,
         price: Number.parseFloat(price),
         category,
+        image_url: imageUrl,
         available: true,
       })
 
@@ -53,10 +72,14 @@ export function AddMenuItemDialog({ open, onOpenChange, restaurantId, onSuccess 
       setDescription("")
       setPrice("")
       setCategory("")
+      setImageFile(null)
       onOpenChange(false)
       onSuccess()
+      notify.success("Menu item added successfully!", `${name} has been added to your menu`)
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to add menu item")
+      const errorMessage = err instanceof Error ? err.message : "Failed to add menu item"
+      setError(errorMessage)
+      notify.error("Failed to add menu item", errorMessage)
     } finally {
       setLoading(false)
     }
@@ -126,6 +149,14 @@ export function AddMenuItemDialog({ open, onOpenChange, restaurantId, onSuccess 
               rows={3}
             />
           </div>
+
+          <FileUpload
+            label="Food Image (Optional)"
+            onFileSelect={setImageFile}
+            currentFile={imageFile}
+            disabled={loading}
+            maxSize={5}
+          />
 
           {error && (
             <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-lg border border-destructive/20">

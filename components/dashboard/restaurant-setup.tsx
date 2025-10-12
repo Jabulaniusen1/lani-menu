@@ -9,17 +9,26 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { FileUpload } from "@/components/ui/file-upload"
+import { SimpleCurrencySelector } from "@/components/ui/simple-currency-selector"
 import { getSupabaseBrowserClient } from "@/lib/supabase/client"
+import { uploadFile, generateFilePath } from "@/lib/storage"
+import { useNotification } from "@/hooks/use-notification"
 import { Loader2, Store } from "lucide-react"
 
 interface RestaurantSetupProps {
   userId: string
+  onRestaurantCreated?: () => void
 }
 
-export function RestaurantSetup({ userId }: RestaurantSetupProps) {
+
+export function RestaurantSetup({ userId, onRestaurantCreated }: RestaurantSetupProps) {
   const router = useRouter()
+  const { notify } = useNotification()
   const [name, setName] = useState("")
   const [description, setDescription] = useState("")
+  const [currency, setCurrency] = useState("USD")
+  const [logoFile, setLogoFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -38,19 +47,45 @@ export function RestaurantSetup({ userId }: RestaurantSetupProps) {
     try {
       const supabase = getSupabaseBrowserClient()
       const slug = generateSlug(name)
+      let logoUrl: string | null = null
+
+      // Upload logo if provided
+      if (logoFile) {
+        const filePath = generateFilePath(userId, "logo", logoFile.name)
+        const { url, error: uploadError } = await uploadFile(logoFile, "restaurant-assets", filePath)
+        
+        if (uploadError) {
+          throw new Error(`Failed to upload logo: ${uploadError}`)
+        }
+        
+        logoUrl = url
+      }
 
       const { error: insertError } = await supabase.from("restaurants").insert({
         user_id: userId,
         name,
         description,
+        currency,
+        logo_url: logoUrl,
         slug,
       })
 
       if (insertError) throw insertError
 
-      router.refresh()
+      notify.success("Restaurant created successfully!", "Your restaurant profile is now set up")
+      
+      // Call the callback to refresh restaurants
+      if (onRestaurantCreated) {
+        console.log('Calling onRestaurantCreated callback')
+        onRestaurantCreated()
+      } else {
+        console.log('No callback provided, refreshing router')
+        router.refresh()
+      }
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to create restaurant")
+      const errorMessage = err instanceof Error ? err.message : "Failed to create restaurant"
+      setError(errorMessage)
+      notify.error("Failed to create restaurant", errorMessage)
     } finally {
       setLoading(false)
     }
@@ -92,6 +127,24 @@ export function RestaurantSetup({ userId }: RestaurantSetupProps) {
                 rows={4}
               />
             </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="currency">Currency</Label>
+              <SimpleCurrencySelector
+                value={currency}
+                onValueChange={setCurrency}
+                placeholder="Select currency"
+                disabled={loading}
+              />
+            </div>
+
+            <FileUpload
+              label="Restaurant Logo (Optional)"
+              onFileSelect={setLogoFile}
+              currentFile={logoFile}
+              disabled={loading}
+              maxSize={5}
+            />
 
             {error && (
               <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-lg border border-destructive/20">

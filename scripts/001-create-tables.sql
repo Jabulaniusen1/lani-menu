@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS restaurants (
   name TEXT NOT NULL,
   description TEXT,
   logo_url TEXT,
+  currency TEXT NOT NULL DEFAULT 'USD',
   slug TEXT UNIQUE NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()

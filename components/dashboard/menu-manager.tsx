@@ -8,6 +8,7 @@ import { Plus, ExternalLink, QrCode } from "lucide-react"
 import { AddMenuItemDialog } from "./add-menu-item-dialog"
 import { MenuItemCard } from "./menu-item-card"
 import { QRCodeDialog } from "./qr-code-dialog"
+// import { CurrencySettings } from "./currency-settings"
 import Link from "next/link"
 
 interface Restaurant {
@@ -15,6 +16,7 @@ interface Restaurant {
   name: string
   slug: string
   description: string | null
+  currency: string
 }
 
 interface MenuItem {
@@ -36,6 +38,7 @@ export function MenuManager({ restaurant }: MenuManagerProps) {
   const [loading, setLoading] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [qrDialogOpen, setQrDialogOpen] = useState(false)
+  const [currentCurrency, setCurrentCurrency] = useState(restaurant.currency)
 
   const fetchMenuItems = async () => {
     const supabase = getSupabaseBrowserClient()
@@ -71,6 +74,12 @@ export function MenuManager({ restaurant }: MenuManagerProps) {
 
   return (
     <div className="space-y-6">
+      {/* <CurrencySettings
+        restaurantId={restaurant.id}
+        currentCurrency={currentCurrency}
+        onCurrencyChange={setCurrentCurrency}
+      /> */}
+      
       <Card>
         <CardHeader>
           <div className="flex items-start justify-between">
@@ -127,7 +136,7 @@ export function MenuManager({ restaurant }: MenuManagerProps) {
               <h3 className="text-xl font-semibold mb-4 capitalize">{category}</h3>
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {items.map((item) => (
-                  <MenuItemCard key={item.id} item={item} onUpdate={fetchMenuItems} />
+                  <MenuItemCard key={item.id} item={item} currency={currentCurrency} onUpdate={fetchMenuItems} />
                 ))}
               </div>
             </div>

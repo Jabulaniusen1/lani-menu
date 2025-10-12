@@ -95,7 +95,7 @@ export function FileUpload({
     <div className={cn("space-y-2", className)}>
       <div
         className={cn(
-          "relative border-2 border-dashed rounded-lg p-3 transition-colors w-[100px]",
+          "relative border-2 border-dashed rounded-lg p-3 transition-colors w-[200px]",
           dragActive ? "border-primary bg-primary/5" : "border-muted-foreground/25",
           disabled && "opacity-50 cursor-not-allowed",
           "hover:border-primary/50 cursor-pointer"

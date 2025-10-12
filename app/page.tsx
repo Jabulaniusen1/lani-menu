@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { QrCode, Zap, Smartphone, BarChart3 } from "lucide-react"
+import { QrCode, Zap, Smartphone, BarChart3, Globe, Mail, Phone, MapPin, Facebook, Twitter, Instagram, Linkedin } from "lucide-react"
 
 export default function HomePage() {
   return (
@@ -174,6 +174,77 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* African Countries */}
+      <section className="container mx-auto px-4 py-20 max-w-7xl">
+        <div className="text-center mb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <h2 className="text-3xl font-bold mb-4">Available Across Africa</h2>
+          <p className="text-muted-foreground text-lg">Serving restaurants in major African markets</p>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200">
+          {/* Kenya */}
+          <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+            <CardContent className="p-6 text-center space-y-3">
+              <div className="text-4xl">🇰🇪</div>
+              <h3 className="font-semibold text-sm">Kenya</h3>
+              <p className="text-xs text-muted-foreground">Nairobi, Mombasa</p>
+            </CardContent>
+          </Card>
+
+          {/* Nigeria */}
+          <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+            <CardContent className="p-6 text-center space-y-3">
+              <div className="text-4xl">🇳🇬</div>
+              <h3 className="font-semibold text-sm">Nigeria</h3>
+              <p className="text-xs text-muted-foreground">Lagos, Abuja</p>
+            </CardContent>
+          </Card>
+
+          {/* South Africa */}
+          <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+            <CardContent className="p-6 text-center space-y-3">
+              <div className="text-4xl">🇿🇦</div>
+              <h3 className="font-semibold text-sm">South Africa</h3>
+              <p className="text-xs text-muted-foreground">Cape Town, Johannesburg</p>
+            </CardContent>
+          </Card>
+
+          {/* Ghana */}
+          <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+            <CardContent className="p-6 text-center space-y-3">
+              <div className="text-4xl">🇬🇭</div>
+              <h3 className="font-semibold text-sm">Ghana</h3>
+              <p className="text-xs text-muted-foreground">Accra, Kumasi</p>
+            </CardContent>
+          </Card>
+
+          {/* Egypt */}
+          <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+            <CardContent className="p-6 text-center space-y-3">
+              <div className="text-4xl">🇪🇬</div>
+              <h3 className="font-semibold text-sm">Egypt</h3>
+              <p className="text-xs text-muted-foreground">Cairo, Alexandria</p>
+            </CardContent>
+          </Card>
+
+          {/* Uganda */}
+          <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+            <CardContent className="p-6 text-center space-y-3">
+              <div className="text-4xl">🇺🇬</div>
+              <h3 className="font-semibold text-sm">Uganda</h3>
+              <p className="text-xs text-muted-foreground">Kampala, Entebbe</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="text-center mt-8 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-400">
+          <p className="text-muted-foreground">
+            <Globe className="w-4 h-4 inline mr-2" />
+            Expanding to more African countries soon
+          </p>
+        </div>
+      </section>
+
       {/* CTA */}
       <section className="container mx-auto px-4 py-20 max-w-7xl">
         <Card className="bg-primary text-primary-foreground animate-in fade-in zoom-in-95 duration-700">
@@ -192,9 +263,94 @@ export default function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t bg-background py-8">
-        <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          <p>© 2025 QR Menu. All rights reserved.</p>
+      <footer className="border-t bg-background">
+        <div className="container mx-auto px-4 py-16 max-w-7xl">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {/* Company Info */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="bg-primary p-2 rounded-lg">
+                  <QrCode className="w-5 h-5 text-primary-foreground" />
+                </div>
+                <span className="text-xl font-bold">QR Menu</span>
+              </div>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Transform your restaurant menu into a digital experience. 
+                Create beautiful QR code menus that delight your customers.
+              </p>
+              <div className="flex gap-4">
+                <Button variant="ghost" size="sm" className="p-2">
+                  <Facebook className="w-4 h-4" />
+                </Button>
+                <Button variant="ghost" size="sm" className="p-2">
+                  <Twitter className="w-4 h-4" />
+                </Button>
+                <Button variant="ghost" size="sm" className="p-2">
+                  <Instagram className="w-4 h-4" />
+                </Button>
+                <Button variant="ghost" size="sm" className="p-2">
+                  <Linkedin className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+
+            {/* Product */}
+            <div className="space-y-4">
+              <h3 className="font-semibold">Product</h3>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li><Link href="/pricing" className="hover:text-foreground transition-colors">Pricing</Link></li>
+                <li><Link href="/features" className="hover:text-foreground transition-colors">Features</Link></li>
+                <li><Link href="/demo" className="hover:text-foreground transition-colors">Demo</Link></li>
+                <li><Link href="/integrations" className="hover:text-foreground transition-colors">Integrations</Link></li>
+                <li><Link href="/api" className="hover:text-foreground transition-colors">API</Link></li>
+              </ul>
+            </div>
+
+            {/* Support */}
+            <div className="space-y-4">
+              <h3 className="font-semibold">Support</h3>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li><Link href="/help" className="hover:text-foreground transition-colors">Help Center</Link></li>
+                <li><Link href="/contact" className="hover:text-foreground transition-colors">Contact Us</Link></li>
+                <li><Link href="/status" className="hover:text-foreground transition-colors">Status</Link></li>
+                <li><Link href="/tutorials" className="hover:text-foreground transition-colors">Tutorials</Link></li>
+                <li><Link href="/faq" className="hover:text-foreground transition-colors">FAQ</Link></li>
+              </ul>
+            </div>
+
+            {/* Contact */}
+            <div className="space-y-4">
+              <h3 className="font-semibold">Contact</h3>
+              <div className="space-y-3 text-sm text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <Mail className="w-4 h-4" />
+                  <span>hello@qrmenu.africa</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Phone className="w-4 h-4" />
+                  <span>+254 700 000 000</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <MapPin className="w-4 h-4" />
+                  <span>Nairobi, Kenya</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom Section */}
+          <div className="border-t mt-12 pt-8">
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+              <div className="text-sm text-muted-foreground">
+                © 2025 QR Menu. All rights reserved.
+              </div>
+              <div className="flex gap-6 text-sm text-muted-foreground">
+                <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link>
+                <Link href="/terms" className="hover:text-foreground transition-colors">Terms of Service</Link>
+                <Link href="/cookies" className="hover:text-foreground transition-colors">Cookie Policy</Link>
+              </div>
+            </div>
+          </div>
         </div>
       </footer>
     </div>

@@ -91,9 +91,11 @@ export function MenuItemCard({ item, currency, onUpdate }: MenuItemCardProps) {
                       <p className="text-xs sm:text-sm text-muted-foreground mt-1 line-clamp-2">{item.description}</p>
                     )}
                   </div>
-                  <Badge variant={item.available ? "default" : "secondary"} className="shrink-0 text-xs">
-                    {item.available ? "Available" : "Hidden"}
-                  </Badge>
+                  <div>
+                    <Badge variant={item.available ? "default" : "secondary"} className="shrink-0 text-xs">
+                      {item.available ? "Available" : "Hidden"}
+                    </Badge>
+                  </div>
                 </div>
               </div>
             </div>

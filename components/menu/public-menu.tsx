@@ -151,7 +151,6 @@ export function PublicMenu({ restaurant, menuItems }: PublicMenuProps) {
               Filters
             </Button>
             
-cl            {/* Clear Filters Button */}
             {(searchQuery || selectedCategory !== "all" || priceFilter !== "all" || sortBy !== "name") && (
               <Button
                 variant="ghost"

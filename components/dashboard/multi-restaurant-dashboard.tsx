@@ -272,7 +272,7 @@ export function MultiRestaurantDashboard({ initialRestaurants, userId, onRestaur
 
       {/* Create Restaurant Dialog */}
       <Dialog open={showAddRestaurant} onOpenChange={setShowAddRestaurant}>
-        <DialogContent className="max-w-sm sm:max-w-md overflow-visible">
+        <DialogContent className="max-w-sm sm:max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Create New Restaurant</DialogTitle>
             <DialogDescription>

@@ -357,7 +357,7 @@ export function RestaurantSwitcher({
             Add
           </Button>
         </DialogTrigger>
-        <DialogContent className="max-w-sm sm:max-w-md overflow-visible">
+        <DialogContent className="max-w-sm sm:max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Create New Restaurant</DialogTitle>
             <DialogDescription>

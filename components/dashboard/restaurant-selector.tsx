@@ -270,7 +270,7 @@ export function RestaurantSelector({
             Add Restaurant
           </Button>
         </DialogTrigger>
-        <DialogContent className="max-w-sm sm:max-w-md">
+        <DialogContent className="max-w-sm sm:max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Create New Restaurant</DialogTitle>
             <DialogDescription>

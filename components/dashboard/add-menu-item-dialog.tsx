@@ -87,7 +87,7 @@ export function AddMenuItemDialog({ open, onOpenChange, restaurantId, onSuccess 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm sm:max-w-md">
+      <DialogContent className="max-w-sm sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader className="px-1 sm:px-0">
           <DialogTitle className="text-lg sm:text-xl">Add Menu Item</DialogTitle>
           <DialogDescription className="text-sm">Add a new item to your restaurant menu</DialogDescription>

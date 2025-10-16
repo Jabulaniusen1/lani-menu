@@ -11,7 +11,7 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  title: "QR Menu - Digital Restaurant Menus",
+  title: "Lani Menu - Digital Restaurant Menus",
   description: "Create beautiful digital menus for your restaurant with QR codes",
     generator: 'v0.app'
 }

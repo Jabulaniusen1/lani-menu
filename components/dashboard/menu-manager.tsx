@@ -3,11 +3,14 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 import { getSupabaseBrowserClient } from "@/lib/supabase/client"
-import { Plus, ExternalLink, QrCode } from "lucide-react"
+import { Plus, ExternalLink, QrCode, Crown, AlertCircle } from "lucide-react"
 import { AddMenuItemDialog } from "./add-menu-item-dialog"
 import { MenuItemCard } from "./menu-item-card"
 import { QRCodeDialog } from "./qr-code-dialog"
+import { useSubscription } from "@/contexts/subscription-context"
+import { useNotification } from "@/hooks/use-notification"
 // import { CurrencySettings } from "./currency-settings"
 import Link from "next/link"
 
@@ -39,6 +42,8 @@ export function MenuManager({ restaurant }: MenuManagerProps) {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [qrDialogOpen, setQrDialogOpen] = useState(false)
   const [currentCurrency, setCurrentCurrency] = useState(restaurant.currency)
+  const { subscription, canAddMenuItem } = useSubscription()
+  const { notify } = useNotification()
 
   const fetchMenuItems = async () => {
     const supabase = getSupabaseBrowserClient()
@@ -110,8 +115,27 @@ export function MenuManager({ restaurant }: MenuManagerProps) {
       </Card>
 
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Menu Items</h2>
-        <Button onClick={() => setDialogOpen(true)}>
+        <div className="flex items-center gap-4">
+          <h2 className="text-2xl font-bold">Menu Items</h2>
+          {subscription?.plan_id === 'free' && (
+            <Badge variant="outline" className="text-xs">
+              {menuItems.length}/5 items
+            </Badge>
+          )}
+        </div>
+        <Button 
+          onClick={async () => {
+            const canAdd = await canAddMenuItem(restaurant.id)
+            if (canAdd) {
+              setDialogOpen(true)
+            } else {
+              notify.error(
+                'Menu item limit reached', 
+                'Upgrade to Pro or Business plan to add more menu items'
+              )
+            }
+          }}
+        >
           <Plus className="w-4 h-4 mr-2" />
           Add Item
         </Button>
@@ -123,7 +147,19 @@ export function MenuManager({ restaurant }: MenuManagerProps) {
         <Card>
           <CardContent className="py-12 text-center">
             <p className="text-muted-foreground mb-4">No menu items yet. Add your first item to get started!</p>
-            <Button onClick={() => setDialogOpen(true)}>
+            <Button 
+              onClick={async () => {
+                const canAdd = await canAddMenuItem(restaurant.id)
+                if (canAdd) {
+                  setDialogOpen(true)
+                } else {
+                  notify.error(
+                    'Menu item limit reached', 
+                    'Upgrade to Pro or Business plan to add more menu items'
+                  )
+                }
+              }}
+            >
               <Plus className="w-4 h-4 mr-2" />
               Add First Item
             </Button>

@@ -14,7 +14,8 @@ import { SimpleCurrencySelector } from "@/components/ui/simple-currency-selector
 import { getSupabaseBrowserClient } from "@/lib/supabase/client"
 import { uploadFile, generateFilePath } from "@/lib/storage"
 import { useNotification } from "@/hooks/use-notification"
-import { Loader2, Store } from "lucide-react"
+import { useSubscription } from "@/contexts/subscription-context"
+import { Loader2, Store, AlertCircle } from "lucide-react"
 
 interface RestaurantSetupProps {
   userId: string
@@ -25,6 +26,7 @@ interface RestaurantSetupProps {
 export function RestaurantSetup({ userId, onRestaurantCreated }: RestaurantSetupProps) {
   const router = useRouter()
   const { notify } = useNotification()
+  const { canAddRestaurant } = useSubscription()
   const [name, setName] = useState("")
   const [description, setDescription] = useState("")
   const [currency, setCurrency] = useState("USD")
@@ -45,6 +47,16 @@ export function RestaurantSetup({ userId, onRestaurantCreated }: RestaurantSetup
     setError(null)
 
     try {
+      // Check if user can add more restaurants
+      const canAdd = await canAddRestaurant()
+      if (!canAdd) {
+        notify.error(
+          'Restaurant limit reached',
+          'Upgrade to Pro or Business plan to add more restaurants'
+        )
+        setLoading(false)
+        return
+      }
       const supabase = getSupabaseBrowserClient()
       const slug = generateSlug(name)
       let logoUrl: string | null = null
@@ -77,7 +89,7 @@ export function RestaurantSetup({ userId, onRestaurantCreated }: RestaurantSetup
       // Call the callback to refresh restaurants
       if (onRestaurantCreated) {
         console.log('Calling onRestaurantCreated callback')
-        onRestaurantCreated()
+        await onRestaurantCreated()
       } else {
         console.log('No callback provided, refreshing router')
         router.refresh()

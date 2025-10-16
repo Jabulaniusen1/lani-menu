@@ -1,9 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { getSupabaseBrowserClient } from "@/lib/supabase/client"
-import { DashboardHeader } from "./dashboard-header"
 import { RestaurantSetup } from "./restaurant-setup"
 import { MultiRestaurantDashboard } from "./multi-restaurant-dashboard"
 import { useNotification } from "@/hooks/use-notification"
@@ -61,9 +60,11 @@ export function DashboardClient({ initialUser, initialRestaurants }: DashboardCl
 
       console.log('Fetched restaurants:', data)
       setRestaurants(data || [])
+      return data || []
     } catch (error) {
       console.error('Error fetching restaurants:', error)
       notify.error("Failed to load restaurants", error instanceof Error ? error.message : "Unknown error")
+      return []
     } finally {
       setLoading(false)
     }
@@ -75,6 +76,11 @@ export function DashboardClient({ initialUser, initialRestaurants }: DashboardCl
     console.log('Previous restaurants count:', restaurants.length)
     console.log('New restaurants count:', updatedRestaurants.length)
     setRestaurants(updatedRestaurants)
+    
+    // If we went from 0 to 1+ restaurants, we should now show the dashboard
+    if (restaurants.length === 0 && updatedRestaurants.length > 0) {
+      console.log('First restaurant created, should show dashboard now')
+    }
   }
 
   // Handle restaurant change with page reload

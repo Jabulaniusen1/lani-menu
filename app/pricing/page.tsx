@@ -1,60 +1,41 @@
+"use client"
+
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Check, QrCode } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { QrCode } from "lucide-react"
+import { PaymentButton } from "@/components/payments/payment-button"
+import { useEffect, useState } from "react"
 
 export default function PricingPage() {
-  const plans = [
-    {
-      name: "Starter",
-      price: "$9",
-      description: "Perfect for small cafes and food trucks",
-      features: [
-        "Up to 50 menu items",
-        "1 QR code",
-        "Basic customization",
-        "Mobile-optimized menu",
-        "Real-time updates",
-        "Email support",
-      ],
-      cta: "Start Free Trial",
-      popular: false,
-    },
-    {
-      name: "Professional",
-      price: "$29",
-      description: "Ideal for restaurants and bars",
-      features: [
-        "Unlimited menu items",
-        "5 QR codes",
-        "Advanced customization",
-        "Mobile-optimized menu",
-        "Real-time updates",
-        "Priority support",
-        "Custom branding",
-        "Analytics dashboard",
-      ],
-      cta: "Start Free Trial",
-      popular: true,
-    },
-    {
-      name: "Enterprise",
-      price: "$99",
-      description: "For restaurant chains and franchises",
-      features: [
-        "Unlimited everything",
-        "Unlimited QR codes",
-        "White-label solution",
-        "Multi-location support",
-        "API access",
-        "Dedicated account manager",
-        "Custom integrations",
-        "Advanced analytics",
-      ],
-      cta: "Contact Sales",
-      popular: false,
-    },
-  ]
+  const [plans, setPlans] = useState<any[]>([])
+
+  useEffect(() => {
+    // Fetch plans from database
+    const fetchPlans = async () => {
+      try {
+        const { getSupabaseBrowserClient } = await import('@/lib/supabase/client')
+        const supabase = getSupabaseBrowserClient()
+        
+        const { data, error } = await supabase
+          .from('subscription_plans')
+          .select('*')
+          .eq('is_active', true)
+          .order('price', { ascending: true })
+
+        if (error) {
+          console.error('Error fetching plans:', error)
+          return
+        }
+
+        setPlans(data || [])
+      } catch (error) {
+        console.error('Error fetching plans:', error)
+      }
+    }
+
+    fetchPlans()
+  }, [])
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary/30">
@@ -66,7 +47,7 @@ export default function PricingPage() {
               <div className="bg-primary p-2 rounded-lg">
                 <QrCode className="w-5 h-5 text-primary-foreground" />
               </div>
-              <span className="text-xl font-bold">QR Menu</span>
+              <span className="text-xl font-bold">Lani Menu</span>
             </Link>
             <div className="flex gap-3">
               <Link href="/sign-in">
@@ -94,51 +75,17 @@ export default function PricingPage() {
       <section className="container mx-auto px-4 pb-20 max-w-7xl">
         <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
           {plans.map((plan, index) => (
-            <Card
-              key={plan.name}
-              className={`relative flex flex-col animate-in fade-in slide-in-from-bottom-8 duration-700 ${
-                plan.popular ? "border-primary shadow-lg scale-105" : ""
-              }`}
-              style={{ animationDelay: `${index * 150}ms` }}
-            >
-              {plan.popular && (
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                  <span className="bg-primary text-primary-foreground text-sm font-semibold px-4 py-1 rounded-full">
-                    Most Popular
-                  </span>
-                </div>
-              )}
-
-              <CardHeader className="text-center pb-8 pt-8">
-                <CardTitle className="text-2xl mb-2">{plan.name}</CardTitle>
-                <CardDescription className="text-base">{plan.description}</CardDescription>
-                <div className="mt-6">
-                  <span className="text-5xl font-bold">{plan.price}</span>
-                  <span className="text-muted-foreground">/month</span>
-                </div>
-              </CardHeader>
-
-              <CardContent className="flex-1">
-                <ul className="space-y-3">
-                  {plan.features.map((feature) => (
-                    <li key={feature} className="flex items-start gap-3">
-                      <div className="bg-primary/10 rounded-full p-1 mt-0.5">
-                        <Check className="w-4 h-4 text-primary" />
-                      </div>
-                      <span className="text-sm leading-relaxed">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-
-              <CardFooter className="pt-6">
-                <Link href="/sign-up" className="w-full">
-                  <Button className="w-full" variant={plan.popular ? "default" : "outline"} size="lg">
-                    {plan.cta}
-                  </Button>
-                </Link>
-              </CardFooter>
-            </Card>
+            <PaymentButton
+              key={plan.plan_id}
+              planId={plan.plan_id}
+              planName={plan.name}
+              price={plan.price}
+              currency={plan.currency}
+              features={plan.features || []}
+              limitations={plan.limitations || []}
+              isPopular={plan.is_popular}
+              isCurrentPlan={false}
+            />
           ))}
         </div>
       </section>

@@ -9,7 +9,10 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { FileUpload } from "@/components/ui/file-upload"
 import { getSupabaseBrowserClient } from "@/lib/supabase/client"
+import { uploadFile, generateMenuFilePath } from "@/lib/storage"
+import { useNotification } from "@/hooks/use-notification"
 import { Loader2 } from "lucide-react"
 
 interface MenuItem {
@@ -19,6 +22,8 @@ interface MenuItem {
   price: number
   category: string
   available: boolean
+  image_url: string | null
+  restaurant_id: string
 }
 
 interface EditMenuItemDialogProps {
@@ -31,10 +36,12 @@ interface EditMenuItemDialogProps {
 const CATEGORIES = ["appetizers", "mains", "desserts", "drinks", "sides", "specials"]
 
 export function EditMenuItemDialog({ open, onOpenChange, item, onSuccess }: EditMenuItemDialogProps) {
+  const { notify } = useNotification()
   const [name, setName] = useState(item.name)
   const [description, setDescription] = useState(item.description || "")
   const [price, setPrice] = useState(item.price.toString())
   const [category, setCategory] = useState(item.category)
+  const [imageFile, setImageFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -43,6 +50,7 @@ export function EditMenuItemDialog({ open, onOpenChange, item, onSuccess }: Edit
     setDescription(item.description || "")
     setPrice(item.price.toString())
     setCategory(item.category)
+    setImageFile(null) // Reset image file when dialog opens
   }, [item])
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -52,6 +60,19 @@ export function EditMenuItemDialog({ open, onOpenChange, item, onSuccess }: Edit
 
     try {
       const supabase = getSupabaseBrowserClient()
+      let imageUrl = item.image_url // Keep existing image if no new one uploaded
+
+      // Upload new image if provided
+      if (imageFile) {
+        const filePath = generateMenuFilePath(item.restaurant_id, imageFile.name)
+        const { url, error: uploadError } = await uploadFile(imageFile, "menu-assets", filePath)
+        
+        if (uploadError) {
+          throw new Error(`Failed to upload image: ${uploadError}`)
+        }
+        
+        imageUrl = url
+      }
 
       const { error: updateError } = await supabase
         .from("menu_items")
@@ -60,6 +81,7 @@ export function EditMenuItemDialog({ open, onOpenChange, item, onSuccess }: Edit
           description: description || null,
           price: Number.parseFloat(price),
           category,
+          image_url: imageUrl,
         })
         .eq("id", item.id)
 
@@ -67,8 +89,11 @@ export function EditMenuItemDialog({ open, onOpenChange, item, onSuccess }: Edit
 
       onOpenChange(false)
       onSuccess()
+      notify.success("Menu item updated successfully!", `${name} has been updated`)
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to update menu item")
+      const errorMessage = err instanceof Error ? err.message : "Failed to update menu item"
+      setError(errorMessage)
+      notify.error("Failed to update menu item", errorMessage)
     } finally {
       setLoading(false)
     }
@@ -135,6 +160,14 @@ export function EditMenuItemDialog({ open, onOpenChange, item, onSuccess }: Edit
               rows={3}
             />
           </div>
+
+          <FileUpload
+            label="Food Image (Optional)"
+            onFileSelect={setImageFile}
+            currentFile={imageFile}
+            disabled={loading}
+            maxSize={5}
+          />
 
           {error && (
             <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-lg border border-destructive/20">

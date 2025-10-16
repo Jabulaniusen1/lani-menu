@@ -4,6 +4,7 @@ import { Inter } from "next/font/google"
 import "./globals.css"
 import { NotificationProvider } from "@/components/notifications/notification-context"
 import { NotificationContainer } from "@/components/notifications/notification-container"
+import { SubscriptionProvider } from "@/contexts/subscription-context"
 
 const inter = Inter({
   subsets: ["latin"],
@@ -25,8 +26,10 @@ export default function RootLayout({
     <html lang="en" className={`${inter.variable} antialiased`}>
       <body>
         <NotificationProvider>
-          {children}
-          <NotificationContainer />
+          <SubscriptionProvider>
+            {children}
+            <NotificationContainer />
+          </SubscriptionProvider>
         </NotificationProvider>
       </body>
     </html>

@@ -3,68 +3,63 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { CreditCard, Crown, Check, Star, Zap, Users, QrCode, Palette } from "lucide-react"
+import { CreditCard, Crown, Check, Star, Zap, Users, QrCode, Palette, Loader2 } from "lucide-react"
+import { PaymentButton } from "@/components/payments/payment-button"
+import { useSubscription } from "@/contexts/subscription-context"
+import { useEffect, useState } from "react"
 
 interface BillingTabProps {
   currentPlan?: string
 }
 
 export function BillingTab({ currentPlan = "free" }: BillingTabProps) {
-  const plans = [
-    {
-      id: "free",
-      name: "Free",
-      price: "$0",
-      period: "forever",
-      description: "Perfect for getting started",
-      features: [
-        "Up to 10 menu items",
-        "Basic QR code generation",
-        "Standard menu design",
-        "Email support"
-      ],
-      limitations: [
-        "Limited customization",
-        "Basic analytics"
-      ],
-      popular: false
-    },
-    {
-      id: "pro",
-      name: "Pro",
-      price: "$19",
-      period: "per month",
-      description: "Best for growing restaurants",
-      features: [
-        "Unlimited menu items",
-        "Advanced QR code customization",
-        "Premium menu designs",
-        "Priority support",
-        "Basic analytics",
-        "Custom branding"
-      ],
-      limitations: [],
-      popular: true
-    },
-    {
-      id: "business",
-      name: "Business",
-      price: "$49",
-      period: "per month",
-      description: "For multiple locations",
-      features: [
-        "Everything in Pro",
-        "Multiple restaurant locations",
-        "Advanced analytics",
-        "API access",
-        "White-label options",
-        "Dedicated support",
-        "Custom integrations"
-      ],
-      limitations: [],
-      popular: false
+  const { subscription, loading, refreshSubscription } = useSubscription()
+  const [plans, setPlans] = useState<any[]>([])
+
+  useEffect(() => {
+    // Fetch plans from database
+    const fetchPlans = async () => {
+      try {
+        const { getSupabaseBrowserClient } = await import('@/lib/supabase/client')
+        const supabase = getSupabaseBrowserClient()
+        
+        const { data, error } = await supabase
+          .from('subscription_plans')
+          .select('*')
+          .eq('is_active', true)
+          .order('price', { ascending: true })
+
+        if (error) {
+          console.error('Error fetching plans:', error)
+          return
+        }
+
+        setPlans(data || [])
+      } catch (error) {
+        console.error('Error fetching plans:', error)
+      }
     }
-  ]
+
+    fetchPlans()
+  }, [])
+
+  // Handle payment success callback
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search)
+    if (urlParams.get('payment') === 'success') {
+      refreshSubscription()
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname)
+    }
+  }, [refreshSubscription])
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="w-8 h-8 animate-spin" />
+      </div>
+    )
+  }
 
   const getPlanIcon = (planId: string) => {
     switch (planId) {
@@ -92,6 +87,8 @@ export function BillingTab({ currentPlan = "free" }: BillingTabProps) {
     }
   }
 
+  const currentPlanId = subscription?.plan_id || 'free'
+
   return (
     <div className="space-y-6">
       {/* Current Plan */}
@@ -108,16 +105,23 @@ export function BillingTab({ currentPlan = "free" }: BillingTabProps) {
         <CardContent>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              {getPlanIcon(currentPlan)}
+              {getPlanIcon(currentPlanId)}
               <div>
-                <h3 className="font-semibold capitalize">{currentPlan} Plan</h3>
+                <h3 className="font-semibold capitalize">{subscription?.plan_name || 'Free'} Plan</h3>
                 <p className="text-sm text-muted-foreground">
-                  {plans.find(p => p.id === currentPlan)?.description}
+                  {currentPlanId === 'free' ? 'Perfect for getting started' :
+                   currentPlanId === 'pro' ? 'Best for growing restaurants' :
+                   'For restaurant chains and franchises'}
                 </p>
+                {subscription?.current_period_end && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Next billing: {new Date(subscription.current_period_end).toLocaleDateString()}
+                  </p>
+                )}
               </div>
             </div>
-            <Badge className={getPlanColor(currentPlan)}>
-              Active
+            <Badge className={getPlanColor(currentPlanId)}>
+              {subscription?.status === 'active' ? 'Active' : subscription?.status || 'Active'}
             </Badge>
           </div>
         </CardContent>
@@ -128,51 +132,18 @@ export function BillingTab({ currentPlan = "free" }: BillingTabProps) {
         <h2 className="text-2xl font-bold mb-6">Choose Your Plan</h2>
         <div className="grid gap-6 md:grid-cols-3">
           {plans.map((plan) => (
-            <Card 
-              key={plan.id} 
-              className={`relative ${plan.popular ? 'ring-2 ring-orange-500 shadow-lg' : ''}`}
-            >
-              {plan.popular && (
-                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                  <Badge className="bg-orange-500 text-white">
-                    Most Popular
-                  </Badge>
-                </div>
-              )}
-              
-              <CardHeader className="text-center">
-                <div className="flex justify-center mb-2">
-                  {getPlanIcon(plan.id)}
-                </div>
-                <CardTitle className="text-xl">{plan.name}</CardTitle>
-                <div className="text-3xl font-bold">
-                  {plan.price}
-                  <span className="text-sm font-normal text-muted-foreground">
-                    /{plan.period}
-                  </span>
-                </div>
-                <CardDescription>{plan.description}</CardDescription>
-              </CardHeader>
-              
-              <CardContent className="space-y-4">
-                <ul className="space-y-2">
-                  {plan.features.map((feature, index) => (
-                    <li key={index} className="flex items-center gap-2 text-sm">
-                      <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
-                      <span>{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-                
-                <Button 
-                  className="w-full" 
-                  variant={plan.id === currentPlan ? "outline" : plan.popular ? "default" : "outline"}
-                  disabled={plan.id === currentPlan}
-                >
-                  {plan.id === currentPlan ? "Current Plan" : "Upgrade"}
-                </Button>
-              </CardContent>
-            </Card>
+            <PaymentButton
+              key={plan.plan_id}
+              planId={plan.plan_id}
+              planName={plan.name}
+              price={plan.price}
+              currency={plan.currency}
+              features={plan.features || []}
+              limitations={plan.limitations || []}
+              isPopular={plan.is_popular}
+              isCurrentPlan={plan.plan_id === currentPlanId}
+              onPaymentSuccess={refreshSubscription}
+            />
           ))}
         </div>
       </div>

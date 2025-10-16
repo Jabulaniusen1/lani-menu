@@ -19,6 +19,7 @@ interface MenuItem {
   category: string
   image_url: string | null
   available: boolean
+  restaurant_id: string
 }
 
 interface MenuItemCardProps {

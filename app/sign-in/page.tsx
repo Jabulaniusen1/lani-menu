@@ -4,11 +4,11 @@ import { QrCode, Sparkles, Zap, Shield } from "lucide-react"
 
 export default function SignInPage() {
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row">
+    <div className="min-h-screen flex flex-col lg:flex-row animate-in slide-in-from-left duration-700 ease-out">
       {/* Left side - Form */}
       <div className="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-8">
         <div className="w-full max-w-md space-y-6 sm:space-y-8">
-          <div className="flex items-center gap-3 mb-6 sm:mb-10">
+          <div className="flex items-center gap-3 mb-6 sm:mb-10 animate-in fade-in slide-in-from-top duration-500 delay-100">
             <div className="bg-orange-500 p-2 rounded-lg">
               <QrCode className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
@@ -24,7 +24,7 @@ export default function SignInPage() {
 
           <div className="text-center text-xs sm:text-sm text-muted-foreground">
             Don't have an account?{" "}
-            <Link href="/sign-up" className="text-primary font-medium hover:underline">
+            <Link href="/sign-up" className="text-primary font-medium hover:underline transition-colors duration-200">
               Sign up for free
             </Link>
           </div>

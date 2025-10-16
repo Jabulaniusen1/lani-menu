@@ -87,18 +87,18 @@ export function MenuManager({ restaurant }: MenuManagerProps) {
       
       <Card>
         <CardHeader>
-          <div className="flex items-start justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
             <div>
-              <CardTitle>Your Digital Menu</CardTitle>
-              <CardDescription>Manage your menu items and share with customers</CardDescription>
+              <CardTitle className="text-lg sm:text-xl">Your Digital Menu</CardTitle>
+              <CardDescription className="text-sm">Manage your menu items and share with customers</CardDescription>
             </div>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={() => setQrDialogOpen(true)}>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Button variant="outline" size="sm" onClick={() => setQrDialogOpen(true)} className="w-full sm:w-auto">
                 <QrCode className="w-4 h-4 mr-2" />
                 QR Code
               </Button>
-              <Link href={`/menu/${restaurant.slug}`} target="_blank">
-                <Button variant="outline" size="sm">
+              <Link href={`/menu/${restaurant.slug}`} target="_blank" className="w-full sm:w-auto">
+                <Button variant="outline" size="sm" className="w-full sm:w-auto">
                   <ExternalLink className="w-4 h-4 mr-2" />
                   View Menu
                 </Button>
@@ -114,9 +114,9 @@ export function MenuManager({ restaurant }: MenuManagerProps) {
         </CardContent>
       </Card>
 
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-4">
-          <h2 className="text-2xl font-bold">Menu Items</h2>
+          <h2 className="text-xl sm:text-2xl font-bold">Menu Items</h2>
           {subscription?.plan_id === 'free' && (
             <Badge variant="outline" className="text-xs">
               {menuItems.length}/5 items
@@ -135,6 +135,7 @@ export function MenuManager({ restaurant }: MenuManagerProps) {
               )
             }
           }}
+          className="w-full sm:w-auto"
         >
           <Plus className="w-4 h-4 mr-2" />
           Add Item
@@ -166,13 +167,18 @@ export function MenuManager({ restaurant }: MenuManagerProps) {
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-8">
+        <div className="space-y-6 sm:space-y-8">
           {Object.entries(groupedItems).map(([category, items]) => (
             <div key={category}>
-              <h3 className="text-xl font-semibold mb-4 capitalize">{category}</h3>
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 capitalize">{category}</h3>
+              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                 {items.map((item) => (
-                  <MenuItemCard key={item.id} item={item} currency={currentCurrency} onUpdate={fetchMenuItems} />
+                  <MenuItemCard
+                    key={item.id}
+                    item={{ ...item, restaurant_id: restaurant.id }}
+                    currency={currentCurrency}
+                    onUpdate={fetchMenuItems}
+                  />
                 ))}
               </div>
             </div>

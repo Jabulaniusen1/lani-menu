@@ -93,12 +93,12 @@ export function MenuManager({ restaurant }: MenuManagerProps) {
               <CardDescription className="text-sm">Manage your menu items and share with customers</CardDescription>
             </div>
             <div className="flex flex-row gap-2">
-              <Button variant="outline" size="sm" onClick={() => setQrDialogOpen(true)} className="lg:w-full sm:w-auto">
+              <Button variant="outline" size="sm" onClick={() => setQrDialogOpen(true)} className="">
                 <QrCode className="w-4 h-4 mr-2" />
                 QR Code
               </Button>
-              <Link href={`/menu/${restaurant.slug}`} target="_blank" className="lg:w-full sm:w-auto">
-                <Button variant="outline" size="sm" className="w-full sm:w-auto">
+              <Link href={`/menu/${restaurant.slug}`} target="_blank" className=" ">
+                <Button variant="outline" size="sm" className=" ">
                   <ExternalLink className="w-4 h-4 mr-2" />
                   View Menu
                 </Button>

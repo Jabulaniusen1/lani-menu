@@ -4,6 +4,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { QrCode } from "lucide-react"
+import { PaymentButton } from "@/components/payments/payment-button"
 import { useEffect, useState } from "react"
 
 export default function PricingPage() {
@@ -74,22 +75,17 @@ export default function PricingPage() {
       <section className="container mx-auto px-4 pb-20 max-w-7xl">
         <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
           {plans.map((plan, index) => (
-            <Card key={plan.plan_id} className="relative">
-              <CardHeader className="text-center">
-                <CardTitle className="text-xl">{plan.name}</CardTitle>
-                <div className="text-3xl font-bold">
-                  {plan.price}
-                  <span className="text-sm font-normal text-muted-foreground">
-                    /month
-                  </span>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <Button className="w-full">
-                  Get Started
-                </Button>
-              </CardContent>
-            </Card>
+            <PaymentButton
+              key={plan.plan_id}
+              planId={plan.plan_id}
+              planName={plan.name}
+              price={plan.price}
+              currency={plan.currency}
+              features={plan.features || []}
+              limitations={plan.limitations || []}
+              isPopular={plan.is_popular}
+              isCurrentPlan={false}
+            />
           ))}
         </div>
       </section>

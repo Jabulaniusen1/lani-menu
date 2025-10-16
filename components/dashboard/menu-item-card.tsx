@@ -19,6 +19,7 @@ interface MenuItem {
   category: string
   image_url: string | null
   available: boolean
+  restaurant_id: string
 }
 
 interface MenuItemCardProps {
@@ -70,11 +71,11 @@ export function MenuItemCard({ item, currency, onUpdate }: MenuItemCardProps) {
   return (
     <>
       <Card className={!item.available ? "opacity-60" : ""}>
-        <CardContent className="p-4">
+        <CardContent className="p-3 sm:p-4">
           <div className="space-y-3">
             <div className="flex items-start gap-3">
               {item.image_url && (
-                <div className="w-16 h-16 shrink-0">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 shrink-0">
                   <img
                     src={item.image_url}
                     alt={item.name}
@@ -83,31 +84,31 @@ export function MenuItemCard({ item, currency, onUpdate }: MenuItemCardProps) {
                 </div>
               )}
               <div className="flex-1 min-w-0">
-                <div className="flex items-start justify-between gap-2">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-semibold text-lg leading-tight">{item.name}</h4>
+                    <h4 className="font-semibold text-base sm:text-lg leading-tight">{item.name}</h4>
                     {item.description && (
-                      <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{item.description}</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground mt-1 line-clamp-2">{item.description}</p>
                     )}
                   </div>
-                  <Badge variant={item.available ? "default" : "secondary"} className="shrink-0">
+                  <Badge variant={item.available ? "default" : "secondary"} className="shrink-0 text-xs">
                     {item.available ? "Available" : "Hidden"}
                   </Badge>
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center justify-between">
-              <span className="text-lg font-bold text-primary">{formatPrice(item.price, currency)}</span>
-              <div className="flex gap-1">
-                <Button variant="ghost" size="icon" onClick={toggleAvailability} disabled={loading}>
-                  {item.available ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <span className="text-base sm:text-lg font-bold text-primary">{formatPrice(item.price, currency)}</span>
+              <div className="flex gap-1 justify-end sm:justify-start">
+                <Button variant="ghost" size="icon" onClick={toggleAvailability} disabled={loading} className="h-8 w-8">
+                  {item.available ? <EyeOff className="w-3 h-3 sm:w-4 sm:h-4" /> : <Eye className="w-3 h-3 sm:w-4 sm:h-4" />}
                 </Button>
-                <Button variant="ghost" size="icon" onClick={() => setEditOpen(true)} disabled={loading}>
-                  <Pencil className="w-4 h-4" />
+                <Button variant="ghost" size="icon" onClick={() => setEditOpen(true)} disabled={loading} className="h-8 w-8">
+                  <Pencil className="w-3 h-3 sm:w-4 sm:h-4" />
                 </Button>
-                <Button variant="ghost" size="icon" onClick={handleDeleteClick} disabled={loading || deleteLoading}>
-                  <Trash2 className="w-4 h-4 text-destructive" />
+                <Button variant="ghost" size="icon" onClick={handleDeleteClick} disabled={loading || deleteLoading} className="h-8 w-8">
+                  <Trash2 className="w-3 h-3 sm:w-4 sm:h-4 text-destructive" />
                 </Button>
               </div>
             </div>

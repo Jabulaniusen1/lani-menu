@@ -14,7 +14,8 @@ import { SimpleCurrencySelector } from "@/components/ui/simple-currency-selector
 import { getSupabaseBrowserClient } from "@/lib/supabase/client"
 import { uploadFile, generateFilePath } from "@/lib/storage"
 import { useNotification } from "@/hooks/use-notification"
-import { Loader2, Store } from "lucide-react"
+import { useSubscription } from "@/contexts/subscription-context"
+import { Loader2, Store, AlertCircle } from "lucide-react"
 
 interface RestaurantSetupProps {
   userId: string
@@ -25,6 +26,7 @@ interface RestaurantSetupProps {
 export function RestaurantSetup({ userId, onRestaurantCreated }: RestaurantSetupProps) {
   const router = useRouter()
   const { notify } = useNotification()
+  const { canAddRestaurant } = useSubscription()
   const [name, setName] = useState("")
   const [description, setDescription] = useState("")
   const [currency, setCurrency] = useState("USD")
@@ -45,6 +47,16 @@ export function RestaurantSetup({ userId, onRestaurantCreated }: RestaurantSetup
     setError(null)
 
     try {
+      // Check if user can add more restaurants
+      const canAdd = await canAddRestaurant()
+      if (!canAdd) {
+        notify.error(
+          'Restaurant limit reached',
+          'Upgrade to Pro or Business plan to add more restaurants'
+        )
+        setLoading(false)
+        return
+      }
       const supabase = getSupabaseBrowserClient()
       const slug = generateSlug(name)
       let logoUrl: string | null = null
@@ -77,7 +89,7 @@ export function RestaurantSetup({ userId, onRestaurantCreated }: RestaurantSetup
       // Call the callback to refresh restaurants
       if (onRestaurantCreated) {
         console.log('Calling onRestaurantCreated callback')
-        onRestaurantCreated()
+        await onRestaurantCreated()
       } else {
         console.log('No callback provided, refreshing router')
         router.refresh()
@@ -92,17 +104,17 @@ export function RestaurantSetup({ userId, onRestaurantCreated }: RestaurantSetup
   }
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-2xl mx-auto px-4 sm:px-0">
       <Card>
         <CardHeader className="text-center">
-          <div className="mx-auto bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mb-4">
-            <Store className="w-8 h-8 text-primary" />
+          <div className="mx-auto bg-primary/10 w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mb-3 sm:mb-4">
+            <Store className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
           </div>
-          <CardTitle className="text-2xl">Welcome to QR Menu!</CardTitle>
-          <CardDescription>Let's set up your restaurant profile to get started</CardDescription>
+          <CardTitle className="text-xl sm:text-2xl">Welcome to Lani Menu!</CardTitle>
+          <CardDescription className="text-sm sm:text-base">Let's set up your restaurant profile to get started</CardDescription>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
+        <CardContent className="p-4 sm:p-6">
+          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
             <div className="space-y-2">
               <Label htmlFor="name">Restaurant Name</Label>
               <Input
@@ -124,7 +136,8 @@ export function RestaurantSetup({ userId, onRestaurantCreated }: RestaurantSetup
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 disabled={loading}
-                rows={4}
+                rows={3}
+                className="text-sm sm:text-base"
               />
             </div>
 
@@ -152,14 +165,14 @@ export function RestaurantSetup({ userId, onRestaurantCreated }: RestaurantSetup
               </div>
             )}
 
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full h-10 sm:h-11" disabled={loading}>
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating restaurant...
+                  <span className="text-sm sm:text-base">Creating restaurant...</span>
                 </>
               ) : (
-                "Create Restaurant"
+                <span className="text-sm sm:text-base">Create Restaurant</span>
               )}
             </Button>
           </form>

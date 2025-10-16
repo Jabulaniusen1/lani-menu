@@ -22,22 +22,27 @@ export function DashboardHeader({ user, restaurant }: DashboardHeaderProps) {
   }
 
   return (
-    <header className="border-b bg-background">
-      <div className="container mx-auto px-4 py-4 ">
+    <header className="border-b bg-background sticky top-0 z-50">
+      <div className="container mx-auto px-4 py-3 sm:py-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="bg-primary p-2 rounded-lg">
-              <QrCode className="w-5 h-5 text-primary-foreground" />
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+            <div className="bg-primary p-1.5 sm:p-2 rounded-lg flex-shrink-0">
+              <QrCode className="w-4 h-4 sm:w-5 sm:h-5 text-primary-foreground" />
             </div>
-            <div>
-              <h1 className="text-xl font-bold">{restaurant?.name || "QR Menu"}</h1>
-              <p className="text-sm text-muted-foreground">{user.email}</p>
+            <div className="min-w-0 flex-1">
+              <h1 className="text-lg sm:text-xl font-bold truncate">{restaurant?.name || "Lani Menu"}</h1>
+              <p className="text-xs sm:text-sm text-muted-foreground truncate">{user.email}</p>
             </div>
           </div>
 
-          <Button variant="outline" onClick={handleSignOut}>
-            <LogOut className="w-4 h-4 mr-2" />
-            Sign Out
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={handleSignOut}
+            className="flex-shrink-0 ml-2"
+          >
+            <LogOut className="w-4 h-4 sm:mr-2" />
+            <span className="hidden sm:inline">Sign Out</span>
           </Button>
         </div>
       </div>

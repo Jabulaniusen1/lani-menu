@@ -78,15 +78,15 @@ export function DashboardSidebar({
   ]
 
   return (
-    <div className="w-64 bg-white border-r border-gray-200 flex flex-col h-screen fixed left-0 top-0 z-40">
+    <div className="w-64 bg-white border-r border-gray-200 flex flex-col h-screen fixed left-0 top-0 z-40 hidden lg:flex">
       {/* Header Section */}
-      <div className="p-6 border-b border-gray-200">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-            <Building2 className="h-5 w-5 text-white" />
+      <div className="p-4 lg:p-6 border-b border-gray-200">
+        <div className="flex items-center gap-2 lg:gap-3 mb-4">
+          <div className="w-6 h-6 lg:w-8 lg:h-8 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+            <Building2 className="h-3 w-3 lg:h-5 lg:w-5 text-white" />
           </div>
-          <div>
-            <h1 className="text-lg font-semibold text-gray-900">QR Menu</h1>
+          <div className="min-w-0">
+            <h1 className="text-base lg:text-lg font-semibold text-gray-900 truncate">Lani Menu</h1>
             <p className="text-xs text-gray-500">Dashboard</p>
           </div>
         </div>
@@ -100,22 +100,22 @@ export function DashboardSidebar({
             <DropdownMenuTrigger asChild>
               <Button 
                 variant="outline" 
-                className="w-full justify-between h-10 px-3 text-left"
+                className="w-full justify-between h-9 lg:h-10 px-2 lg:px-3 text-left"
               >
-                <div className="flex items-center gap-2 flex-1 min-w-0">
-                  <div className="w-6 h-6 bg-gray-100 rounded flex items-center justify-center flex-shrink-0">
+                <div className="flex items-center gap-1.5 lg:gap-2 flex-1 min-w-0">
+                  <div className="w-5 h-5 lg:w-6 lg:h-6 bg-gray-100 rounded flex items-center justify-center flex-shrink-0">
                     {currentRestaurant?.logo_url ? (
                       <img 
                         src={currentRestaurant.logo_url} 
                         alt={currentRestaurant.name}
-                        className="w-5 h-5 rounded object-cover"
+                        className="w-4 h-4 lg:w-5 lg:h-5 rounded object-cover"
                       />
                     ) : (
-                      <Building2 className="h-3 w-3 text-gray-500" />
+                      <Building2 className="h-2.5 w-2.5 lg:h-3 lg:w-3 text-gray-500" />
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="font-medium text-sm truncate">
+                    <div className="font-medium text-xs lg:text-sm truncate">
                       {currentRestaurant?.name || "Select Restaurant"}
                     </div>
                     {currentRestaurant?.is_primary && (
@@ -123,10 +123,10 @@ export function DashboardSidebar({
                     )}
                   </div>
                   {currentRestaurant?.is_primary && (
-                    <Star className="h-3 w-3 text-yellow-500 fill-current flex-shrink-0" />
+                    <Star className="h-2.5 w-2.5 lg:h-3 lg:w-3 text-yellow-500 fill-current flex-shrink-0" />
                   )}
                 </div>
-                <ChevronDown className="h-4 w-4 flex-shrink-0" />
+                <ChevronDown className="h-3 w-3 lg:h-4 lg:w-4 flex-shrink-0" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-64" align="start">
@@ -184,7 +184,7 @@ export function DashboardSidebar({
       </div>
 
       {/* Navigation Tabs */}
-      <div className="flex-1 p-4">
+      <div className="flex-1 p-3 lg:p-4">
         <nav className="space-y-1">
           {tabs.map((tab) => {
             const Icon = tab.icon
@@ -192,14 +192,14 @@ export function DashboardSidebar({
               <button
                 key={tab.id}
                 onClick={() => onTabChange(tab.id)}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${
+                className={`w-full flex items-center gap-2 lg:gap-3 px-2 lg:px-3 py-2 lg:py-2.5 rounded-lg text-left transition-colors ${
                   activeTab === tab.id
                     ? "bg-blue-50 text-blue-700 border border-blue-200"
                     : "text-gray-700 hover:bg-gray-50"
                 }`}
               >
-                <Icon className="h-5 w-5" />
-                <span className="font-medium">{tab.label}</span>
+                <Icon className="h-4 w-4 lg:h-5 lg:w-5 flex-shrink-0" />
+                <span className="font-medium text-sm lg:text-base truncate">{tab.label}</span>
               </button>
             )
           })}
@@ -207,14 +207,14 @@ export function DashboardSidebar({
       </div>
 
       {/* Footer with Logout */}
-      <div className="p-4 border-t border-gray-200">
+      <div className="p-3 lg:p-4 border-t border-gray-200">
         <Button
           variant="ghost"
           onClick={handleLogout}
-          className="w-full justify-start gap-3 text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+          className="w-full justify-start gap-2 lg:gap-3 text-gray-700 hover:bg-gray-50 hover:text-gray-900 h-9 lg:h-10"
         >
-          <LogOut className="h-5 w-5" />
-          <span className="font-medium">Logout</span>
+          <LogOut className="h-4 w-4 lg:h-5 lg:w-5 flex-shrink-0" />
+          <span className="font-medium text-sm lg:text-base">Logout</span>
         </Button>
       </div>
     </div>

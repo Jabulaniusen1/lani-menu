@@ -1,7 +1,6 @@
 "use client"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { CreditCard, Crown, Check, Star, Zap, Users, QrCode, Palette, Loader2 } from "lucide-react"
 import { PaymentButton } from "@/components/payments/payment-button"
@@ -90,25 +89,25 @@ export function BillingTab({ currentPlan = "free" }: BillingTabProps) {
   const currentPlanId = subscription?.plan_id || 'free'
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Current Plan */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <CreditCard className="h-5 w-5" />
+        <CardHeader className="p-4 sm:p-6">
+          <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+            <CreditCard className="h-4 w-4 sm:h-5 sm:w-5" />
             Current Plan
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-sm">
             Your current subscription details
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-between">
+        <CardContent className="p-4 sm:p-6 pt-0">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center gap-3">
               {getPlanIcon(currentPlanId)}
-              <div>
-                <h3 className="font-semibold capitalize">{subscription?.plan_name || 'Free'} Plan</h3>
-                <p className="text-sm text-muted-foreground">
+              <div className="min-w-0 flex-1">
+                <h3 className="font-semibold capitalize text-base sm:text-lg">{subscription?.plan_name || 'Free'} Plan</h3>
+                <p className="text-xs sm:text-sm text-muted-foreground">
                   {currentPlanId === 'free' ? 'Perfect for getting started' :
                    currentPlanId === 'pro' ? 'Best for growing restaurants' :
                    'For restaurant chains and franchises'}
@@ -129,8 +128,8 @@ export function BillingTab({ currentPlan = "free" }: BillingTabProps) {
 
       {/* Available Plans */}
       <div>
-        <h2 className="text-2xl font-bold mb-6">Choose Your Plan</h2>
-        <div className="grid gap-6 md:grid-cols-3">
+        <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Choose Your Plan</h2>
+        <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {plans.map((plan) => (
             <PaymentButton
               key={plan.plan_id}
@@ -150,17 +149,17 @@ export function BillingTab({ currentPlan = "free" }: BillingTabProps) {
 
       {/* Coming Soon Features */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Zap className="h-5 w-5" />
+        <CardHeader className="p-4 sm:p-6">
+          <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+            <Zap className="h-4 w-4 sm:h-5 sm:w-5" />
             Coming Soon
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-sm">
             Exciting features we're working on
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-2">
+        <CardContent className="p-4 sm:p-6 pt-0">
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
             <div className="flex items-start gap-3">
               <div className="bg-blue-100 p-2 rounded-lg">
                 <Users className="h-5 w-5 text-blue-600" />

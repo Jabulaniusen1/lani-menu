@@ -280,7 +280,7 @@ export function RestaurantsOverview({
               Add Restaurant
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-md overflow-visible">
+          <DialogContent className="max-w-sm sm:max-w-md overflow-visible">
             <DialogHeader>
               <DialogTitle>Create New Restaurant</DialogTitle>
               <DialogDescription>

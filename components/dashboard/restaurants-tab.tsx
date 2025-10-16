@@ -256,7 +256,7 @@ export function RestaurantsTab({
               Add Restaurant
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-sm sm:max-w-md">
             <DialogHeader>
               <DialogTitle>Create New Restaurant</DialogTitle>
               <DialogDescription>

@@ -154,17 +154,17 @@ export function QRCodeDialog({ open, onOpenChange, menuUrl, restaurantName }: QR
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>Menu QR Code</DialogTitle>
-          <DialogDescription>Download or print this QR code to share your menu with customers</DialogDescription>
+      <DialogContent className="max-w-sm sm:max-w-md">
+        <DialogHeader className="px-1 sm:px-0">
+          <DialogTitle className="text-lg sm:text-xl">Menu QR Code</DialogTitle>
+          <DialogDescription className="text-sm">Download or print this QR code to share your menu with customers</DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6">
-          <div className="flex justify-center bg-muted p-6 rounded-lg">
+        <div className="space-y-4 sm:space-y-6">
+          <div className="flex justify-center bg-muted p-3 sm:p-6 rounded-lg">
             {loading ? (
-              <div className="min-h-[300px] min-w-[300px] flex items-center justify-center">
-                <div className="text-muted-foreground text-sm">
+              <div className="min-h-[200px] min-w-[200px] sm:min-h-[250px] sm:min-w-[250px] flex items-center justify-center">
+                <div className="text-muted-foreground text-xs sm:text-sm">
                   Generating QR code...
                 </div>
               </div>
@@ -172,11 +172,11 @@ export function QRCodeDialog({ open, onOpenChange, menuUrl, restaurantName }: QR
               <img 
                 src={qrDataUrl} 
                 alt="QR Code" 
-                className="max-w-[300px] max-h-[300px]"
+                className="max-w-[200px] max-h-[200px] sm:max-w-[250px] sm:max-h-[250px]"
               />
             ) : (
-              <div className="min-h-[300px] min-w-[300px] flex items-center justify-center">
-                <div className="text-muted-foreground text-sm">
+              <div className="min-h-[200px] min-w-[200px] sm:min-h-[250px] sm:min-w-[250px] flex items-center justify-center">
+                <div className="text-muted-foreground text-xs sm:text-sm">
                   Failed to generate QR code
                 </div>
               </div>
@@ -184,27 +184,27 @@ export function QRCodeDialog({ open, onOpenChange, menuUrl, restaurantName }: QR
           </div>
 
           <div className="space-y-2">
-            <p className="text-sm font-medium">Scan this code to access:</p>
-            <code className="text-xs bg-muted px-3 py-2 rounded border block break-all">{menuUrl}</code>
+            <p className="text-xs sm:text-sm font-medium">Scan this code to access:</p>
+            <code className="text-xs bg-muted px-2 sm:px-3 py-1.5 sm:py-2 rounded border block break-all">{menuUrl}</code>
           </div>
 
           <div className="space-y-3">
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
               <Button 
                 onClick={handleDownload} 
-                className="flex-1" 
+                className="flex-1 h-9 sm:h-10 text-sm" 
                 disabled={!qrDataUrl || loading}
               >
-                <Download className="w-4 h-4 mr-2" />
+                <Download className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
                 Download PNG
               </Button>
               <Button 
                 onClick={handlePrint} 
                 variant="outline" 
-                className="flex-1 bg-transparent"
+                className="flex-1 h-9 sm:h-10 text-sm bg-transparent"
                 disabled={!qrDataUrl || loading}
               >
-                <Printer className="w-4 h-4 mr-2" />
+                <Printer className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
                 Print
               </Button>
             </div>
@@ -213,7 +213,7 @@ export function QRCodeDialog({ open, onOpenChange, menuUrl, restaurantName }: QR
             <Button 
               onClick={generateQRCode} 
               variant="outline" 
-              className="w-full"
+              className="w-full h-9 sm:h-10 text-sm"
               disabled={loading}
             >
               {loading ? "Generating..." : "Retry QR Generation"}

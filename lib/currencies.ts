@@ -133,3 +133,27 @@ export function formatPrice(price: number, currencyCode: string): string {
   
   return `${currency.symbol}${price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }
+
+// Format number with commas for input display (e.g., 1000 -> "1,000")
+export function formatNumberWithCommas(value: string): string {
+  // Remove any existing commas and non-numeric characters except decimal point
+  const cleanValue = value.replace(/[^\d.]/g, '')
+  
+  // Split by decimal point
+  const parts = cleanValue.split('.')
+  const integerPart = parts[0]
+  const decimalPart = parts[1]
+  
+  // Add commas to integer part
+  const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+  
+  // Rejoin with decimal part if it exists
+  return decimalPart !== undefined ? `${formattedInteger}.${decimalPart}` : formattedInteger
+}
+
+// Parse comma-formatted string back to number (e.g., "1,000" -> 1000)
+export function parseCommaFormattedNumber(value: string): number {
+  // Remove commas and parse as float
+  const cleanValue = value.replace(/,/g, '')
+  return parseFloat(cleanValue) || 0
+}

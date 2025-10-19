@@ -38,7 +38,7 @@ interface PublicMenuProps {
 export function PublicMenu({ restaurant, menuItems }: PublicMenuProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategory, setSelectedCategory] = useState<string>("all")
-  const [priceFilter, setPriceFilter] = useState<string>("all")
+  const [priceFilter] = useState<string>("all")
   const [sortBy, setSortBy] = useState<string>("name")
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null)
   const [showFilters, setShowFilters] = useState(false)
@@ -47,7 +47,6 @@ export function PublicMenu({ restaurant, menuItems }: PublicMenuProps) {
   const clearFilters = () => {
     setSearchQuery("")
     setSelectedCategory("all")
-    setPriceFilter("all")
     setSortBy("name")
   }
 
@@ -62,12 +61,7 @@ export function PublicMenu({ restaurant, menuItems }: PublicMenuProps) {
     
     const matchesCategory = selectedCategory === "all" || item.category === selectedCategory
     
-    const matchesPrice = priceFilter === "all" || 
-      (priceFilter === "low" && item.price < 15) ||
-      (priceFilter === "medium" && item.price >= 15 && item.price < 30) ||
-      (priceFilter === "high" && item.price >= 30)
-    
-    return matchesSearch && matchesCategory && matchesPrice
+    return matchesSearch && matchesCategory
   }).sort((a, b) => {
     switch (sortBy) {
       case "price-low":
@@ -139,71 +133,88 @@ export function PublicMenu({ restaurant, menuItems }: PublicMenuProps) {
             />
           </div>
 
-          {/* Filter Controls */}
-          <div className="flex flex-wrap gap-2 items-center">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowFilters(!showFilters)}
-              className="gap-2"
-            >
-              <Filter className="w-4 h-4" />
-              Filters
-            </Button>
-            
-            {(searchQuery || selectedCategory !== "all" || priceFilter !== "all" || sortBy !== "name") && (
+          {/* Category Filter Buttons */}
+          <div className="space-y-4">
+            <div className="flex flex-wrap gap-2">
               <Button
-                variant="ghost"
+                variant={selectedCategory === "all" ? "default" : "outline"}
                 size="sm"
-                onClick={clearFilters}
-                className="gap-2 text-muted-foreground hover:text-foreground"
+                onClick={() => setSelectedCategory("all")}
+                className="capitalize"
               >
-                <X className="w-4 h-4" />
-                Clear Filters
+                All Items
               </Button>
-            )}
-            
-            {showFilters && (
-              <div className="flex flex-wrap gap-2">
-                {/* Category Filter */}
-                <select
-                  value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="px-3 py-1.5 text-sm border rounded-md bg-background"
+              {categories.map(category => (
+                <Button
+                  key={category}
+                  variant={selectedCategory === category ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setSelectedCategory(category)}
+                  className="capitalize"
                 >
-                  <option value="all">All Categories</option>
-                  {categories.map(category => (
-                    <option key={category} value={category} className="capitalize">
-                      {category}
-                    </option>
-                  ))}
-                </select>
+                  {category}
+                </Button>
+              ))}
+            </div>
 
-                {/* Price Filter */}
-                <select
-                  value={priceFilter}
-                  onChange={(e) => setPriceFilter(e.target.value)}
-                  className="px-3 py-1.5 text-sm border rounded-md bg-background"
+            {/* Additional Filter Controls */}
+            <div className="flex flex-wrap gap-2 items-center">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowFilters(!showFilters)}
+                className="gap-2"
+              >
+                <Filter className="w-4 h-4" />
+                Sort Options
+              </Button>
+              
+              {(searchQuery || selectedCategory !== "all" || sortBy !== "name") && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearFilters}
+                  className="gap-2 text-muted-foreground hover:text-foreground"
                 >
-                  <option value="all">All Prices</option>
-                  <option value="low">Under $15</option>
-                  <option value="medium">$15 - $30</option>
-                  <option value="high">Over $30</option>
-                </select>
-
-                {/* Sort Filter */}
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="px-3 py-1.5 text-sm border rounded-md bg-background"
-                >
-                  <option value="name">Sort by Name</option>
-                  <option value="price-low">Price: Low to High</option>
-                  <option value="price-high">Price: High to Low</option>
-                  <option value="popular">Most Popular</option>
-                </select>
-              </div>
-            )}
+                  <X className="w-4 h-4" />
+                  Clear All
+                </Button>
+              )}
+              
+              {showFilters && (
+                <div className="flex flex-wrap gap-2 items-center">
+                  <span className="text-sm font-medium text-muted-foreground mr-2">Sort:</span>
+                  <Button
+                    variant={sortBy === "name" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setSortBy("name")}
+                  >
+                    Name
+                  </Button>
+                  <Button
+                    variant={sortBy === "price-low" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setSortBy("price-low")}
+                  >
+                    Price: Low to High
+                  </Button>
+                  <Button
+                    variant={sortBy === "price-high" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setSortBy("price-high")}
+                  >
+                    Price: High to Low
+                  </Button>
+                  <Button
+                    variant={sortBy === "popular" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setSortBy("popular")}
+                  >
+                    Most Popular
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

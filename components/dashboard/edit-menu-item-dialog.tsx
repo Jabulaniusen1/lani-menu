@@ -13,6 +13,7 @@ import { FileUpload } from "@/components/ui/file-upload"
 import { getSupabaseBrowserClient } from "@/lib/supabase/client"
 import { uploadFile, generateMenuFilePath } from "@/lib/storage"
 import { useNotification } from "@/hooks/use-notification"
+import { formatNumberWithCommas, parseCommaFormattedNumber } from "@/lib/currency"
 import { Loader2 } from "lucide-react"
 
 interface MenuItem {
@@ -40,15 +41,23 @@ export function EditMenuItemDialog({ open, onOpenChange, item, onSuccess }: Edit
   const [name, setName] = useState(item.name)
   const [description, setDescription] = useState(item.description || "")
   const [price, setPrice] = useState(item.price.toString())
+  const [displayPrice, setDisplayPrice] = useState(formatNumberWithCommas(item.price.toString()))
   const [category, setCategory] = useState(item.category)
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    setPrice(value)
+    setDisplayPrice(formatNumberWithCommas(value))
+  }
+
   useEffect(() => {
     setName(item.name)
     setDescription(item.description || "")
     setPrice(item.price.toString())
+    setDisplayPrice(formatNumberWithCommas(item.price.toString()))
     setCategory(item.category)
     setImageFile(null) // Reset image file when dialog opens
   }, [item])
@@ -79,7 +88,7 @@ export function EditMenuItemDialog({ open, onOpenChange, item, onSuccess }: Edit
         .update({
           name,
           description: description || null,
-          price: Number.parseFloat(price),
+          price: parseCommaFormattedNumber(price),
           category,
           image_url: imageUrl,
         })
@@ -141,11 +150,9 @@ export function EditMenuItemDialog({ open, onOpenChange, item, onSuccess }: Edit
             <Label htmlFor="edit-price" className="text-sm">Price</Label>
             <Input
               id="edit-price"
-              type="number"
-              step="0.01"
-              min="0"
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
+              type="text"
+              value={displayPrice}
+              onChange={handlePriceChange}
               required
               disabled={loading}
               className="h-9 sm:h-10 text-sm"

@@ -35,10 +35,14 @@ export function RestaurantSetup({ userId, onRestaurantCreated }: RestaurantSetup
   const [error, setError] = useState<string | null>(null)
 
   const generateSlug = (name: string) => {
-    return name
+    const baseSlug = name
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-+|-+$/g, "")
+    
+    // Add timestamp to ensure uniqueness
+    const timestamp = Date.now().toString(36)
+    return `${baseSlug}-${timestamp}`
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -107,7 +111,26 @@ export function RestaurantSetup({ userId, onRestaurantCreated }: RestaurantSetup
         router.refresh()
       }
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to create restaurant"
+      let errorMessage = "A restaurant with this exact name already exists. Please try a different name."
+      
+      if (err instanceof Error) {
+        // Check for specific constraint violations
+        if (err.message.includes("duplicate key value violates unique constraint")) {
+          if (err.message.includes("restaurants_slug_key")) {
+            errorMessage = "A restaurant with this exact name already exists. Please try a different name."
+          } else if (err.message.includes("restaurants_name_key")) {
+            errorMessage = "A restaurant with this exact name already exists. Please try a different name."
+          } else {
+            errorMessage = "A restaurant with this name already exists. Please try a different name."
+          }
+        } else if (err.message.includes("duplicate") || err.message.includes("unique") || err.message.includes("constraint")) {
+          errorMessage = "A restaurant with this exact name already exists. Please try a different name."
+        } else {
+          // For any other error, still show the user-friendly message
+          errorMessage = "A restaurant with this exact name already exists. Please try a different name."
+        }
+      }
+      
       setError(errorMessage)
       notify.error("Failed to create restaurant", errorMessage)
     } finally {

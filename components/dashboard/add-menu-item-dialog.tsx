@@ -13,6 +13,7 @@ import { FileUpload } from "@/components/ui/file-upload"
 import { getSupabaseBrowserClient } from "@/lib/supabase/client"
 import { uploadFile, generateFilePath, generateMenuFilePath } from "@/lib/storage"
 import { useNotification } from "@/hooks/use-notification"
+import { formatNumberWithCommas, parseCommaFormattedNumber } from "@/lib/currency"
 import { Loader2 } from "lucide-react"
 
 interface AddMenuItemDialogProps {
@@ -29,10 +30,17 @@ export function AddMenuItemDialog({ open, onOpenChange, restaurantId, onSuccess 
   const [name, setName] = useState("")
   const [description, setDescription] = useState("")
   const [price, setPrice] = useState("")
+  const [displayPrice, setDisplayPrice] = useState("")
   const [category, setCategory] = useState("")
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    setPrice(value)
+    setDisplayPrice(formatNumberWithCommas(value))
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -59,7 +67,7 @@ export function AddMenuItemDialog({ open, onOpenChange, restaurantId, onSuccess 
         restaurant_id: restaurantId,
         name,
         description: description || null,
-        price: Number.parseFloat(price),
+        price: parseCommaFormattedNumber(price),
         category,
         image_url: imageUrl,
         available: true,
@@ -71,6 +79,7 @@ export function AddMenuItemDialog({ open, onOpenChange, restaurantId, onSuccess 
       setName("")
       setDescription("")
       setPrice("")
+      setDisplayPrice("")
       setCategory("")
       setImageFile(null)
       onOpenChange(false)
@@ -128,12 +137,10 @@ export function AddMenuItemDialog({ open, onOpenChange, restaurantId, onSuccess 
             <Label htmlFor="price" className="text-sm">Price</Label>
             <Input
               id="price"
-              type="number"
-              step="0.01"
-              min="0"
+              type="text"
               placeholder="0.00"
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
+              value={displayPrice}
+              onChange={handlePriceChange}
               required
               disabled={loading}
               className="h-9 sm:h-10 text-sm"

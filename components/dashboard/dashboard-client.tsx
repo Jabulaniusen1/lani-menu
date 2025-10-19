@@ -3,7 +3,6 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { getSupabaseBrowserClient } from "@/lib/supabase/client"
-import { RestaurantSetup } from "./restaurant-setup"
 import { MultiRestaurantDashboard } from "./multi-restaurant-dashboard"
 import { useNotification } from "@/hooks/use-notification"
 import { Loader2 } from "lucide-react"
@@ -106,18 +105,12 @@ export function DashboardClient({ initialUser, initialRestaurants }: DashboardCl
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {!restaurants || restaurants.length === 0 ? (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-          <RestaurantSetup userId={user.id} onRestaurantCreated={fetchRestaurants} />
-        </div>
-      ) : (
-        <MultiRestaurantDashboard 
-          initialRestaurants={restaurants} 
-          userId={user.id}
-          onRestaurantsUpdate={handleRestaurantsUpdate}
-          onRestaurantChange={handleRestaurantChange}
-        />
-      )}
+      <MultiRestaurantDashboard 
+        initialRestaurants={restaurants} 
+        userId={user.id}
+        onRestaurantsUpdate={handleRestaurantsUpdate}
+        onRestaurantChange={handleRestaurantChange}
+      />
     </div>
   )
 }

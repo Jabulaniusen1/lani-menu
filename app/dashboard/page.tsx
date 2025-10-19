@@ -21,7 +21,15 @@ export default async function DashboardPage() {
     console.error('Error fetching restaurants:', restaurantsError)
   }
   
-  console.log('Restaurants data from database:', restaurants)
+  console.log('Dashboard page - User ID:', user.id)
+  console.log('Dashboard page - Restaurants data from database:', restaurants)
+  console.log('Dashboard page - Restaurants count:', restaurants?.length || 0)
+
+  // If user has no restaurants, redirect to add restaurant page
+  if (!restaurants || restaurants.length === 0) {
+    console.log('Dashboard page - No restaurants found, redirecting to add-restaurant')
+    redirect("/add-restaurant")
+  }
 
   // Get primary restaurant for header (or first restaurant)
   const primaryRestaurant = restaurants?.find((r: any) => r.is_primary) || restaurants?.[0] || null

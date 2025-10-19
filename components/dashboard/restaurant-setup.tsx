@@ -73,16 +73,28 @@ export function RestaurantSetup({ userId, onRestaurantCreated }: RestaurantSetup
         logoUrl = url
       }
 
-      const { error: insertError } = await supabase.from("restaurants").insert({
+      // First, insert the restaurant
+      const { data: insertData, error: insertError } = await supabase.from("restaurants").insert({
         user_id: userId,
         name,
         description,
         currency,
         logo_url: logoUrl,
         slug,
-      })
+      }).select()
 
       if (insertError) throw insertError
+
+      const restaurantId = insertData[0].id
+
+      // Then, create the user_restaurants relationship
+      const { error: userRestaurantError } = await supabase.from("user_restaurants").insert({
+        user_id: userId,
+        restaurant_id: restaurantId,
+        is_primary: true // First restaurant is always primary
+      })
+
+      if (userRestaurantError) throw userRestaurantError
 
       notify.success("Restaurant created successfully!", "Your restaurant profile is now set up")
       

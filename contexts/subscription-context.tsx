@@ -126,18 +126,18 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
 
   const getPlanLimits = () => {
     if (!subscription) {
-      return { menuItems: 5, restaurants: 1 }
+      return { menuItems: 5, restaurants: 999999 }
     }
 
     switch (subscription.plan_id) {
       case 'free':
-        return { menuItems: 5, restaurants: 1 }
+        return { menuItems: 5, restaurants: 999999 }
       case 'pro':
-        return { menuItems: 999999, restaurants: 3 }
+        return { menuItems: 999999, restaurants: 999999 }
       case 'business':
         return { menuItems: 999999, restaurants: 999999 }
       default:
-        return { menuItems: 5, restaurants: 1 }
+        return { menuItems: 5, restaurants: 999999 }
     }
   }
 

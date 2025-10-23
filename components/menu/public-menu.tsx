@@ -390,7 +390,14 @@ export function PublicMenu({ restaurant, menuItems }: PublicMenuProps) {
       {/* Footer */}
       <footer className="border-t bg-background py-6 mt-12">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          <p>Powered by Lanimenu</p>
+          <a 
+            href="https://lanimenu.live" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="hover:text-foreground transition-colors"
+          >
+            Powered by Lanimenu
+          </a>
         </div>
       </footer>
     </div>

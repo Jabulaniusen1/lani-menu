@@ -53,7 +53,7 @@ export async function deleteFile(bucket: string, path: string): Promise<{ error:
 }
 
 // Generate unique file path
-export function generateFilePath(userId: string, type: "logo" | "menu-item", filename: string): string {
+export function generateFilePath(userId: string, type: "logo" | "menu-item" | "pdf-menu", filename: string): string {
   const timestamp = Date.now()
   const extension = filename.split(".").pop()
   return `${userId}/${type}/${timestamp}-${Math.random().toString(36).substring(2)}.${extension}`

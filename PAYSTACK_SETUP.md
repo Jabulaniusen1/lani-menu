@@ -76,8 +76,8 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 - Handle plan upgrades/downgrades
 
 ### ✅ Plan Restrictions
-- **Free Plan**: 5 menu items, 1 restaurant
-- **Pro Plan**: Unlimited menu items, 3 restaurants
+- **Free Plan**: 5 menu items, unlimited restaurants
+- **Pro Plan**: Unlimited menu items, unlimited restaurants
 - **Business Plan**: Unlimited everything
 
 ### ✅ UI Components

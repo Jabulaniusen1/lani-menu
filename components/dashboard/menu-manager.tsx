@@ -5,10 +5,11 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { getSupabaseBrowserClient } from "@/lib/supabase/client"
-import { Plus, ExternalLink, QrCode, Crown, AlertCircle } from "lucide-react"
+import { Plus, ExternalLink, QrCode, Crown, AlertCircle, Copy } from "lucide-react"
 import { AddMenuItemDialog } from "./add-menu-item-dialog"
 import { MenuItemCard } from "./menu-item-card"
 import { QRCodeDialog } from "./qr-code-dialog"
+import { MenuTypeSwitcher } from "./menu-type-switcher"
 import { useSubscription } from "@/contexts/subscription-context"
 import { useNotification } from "@/hooks/use-notification"
 // import { CurrencySettings } from "./currency-settings"
@@ -20,6 +21,8 @@ interface Restaurant {
   slug: string
   description: string | null
   currency: string
+  pdf_menu_url: string | null
+  menu_type: string
 }
 
 interface MenuItem {
@@ -42,6 +45,8 @@ export function MenuManager({ restaurant }: MenuManagerProps) {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [qrDialogOpen, setQrDialogOpen] = useState(false)
   const [currentCurrency, setCurrentCurrency] = useState(restaurant.currency)
+  const [currentRestaurant, setCurrentRestaurant] = useState(restaurant)
+  const [displayMode, setDisplayMode] = useState<'items' | 'pdf'>('items')
   const { subscription, canAddMenuItem } = useSubscription()
   const { notify } = useNotification()
 
@@ -50,7 +55,7 @@ export function MenuManager({ restaurant }: MenuManagerProps) {
     const { data } = await supabase
       .from("menu_items")
       .select("*")
-      .eq("restaurant_id", restaurant.id)
+      .eq("restaurant_id", currentRestaurant.id)
       .order("category", { ascending: true })
       .order("name", { ascending: true })
 
@@ -60,9 +65,22 @@ export function MenuManager({ restaurant }: MenuManagerProps) {
     setLoading(false)
   }
 
+  const refreshRestaurantData = async () => {
+    const supabase = getSupabaseBrowserClient()
+    const { data } = await supabase
+      .from("restaurants")
+      .select("*")
+      .eq("id", currentRestaurant.id)
+      .single()
+
+    if (data) {
+      setCurrentRestaurant(data)
+    }
+  }
+
   useEffect(() => {
     fetchMenuItems()
-  }, [restaurant.id])
+  }, [currentRestaurant.id])
 
   const groupedItems = menuItems.reduce(
     (acc, item) => {
@@ -79,78 +97,98 @@ export function MenuManager({ restaurant }: MenuManagerProps) {
 
   return (
     <div className="space-y-6">
-      {/* <CurrencySettings
-        restaurantId={restaurant.id}
-        currentCurrency={currentCurrency}
-        onCurrencyChange={setCurrentCurrency}
-      /> */}
-      
+      {/* Menu Type Switcher */}
+      <MenuTypeSwitcher 
+        restaurant={currentRestaurant} 
+        displayMode={displayMode}
+        onDisplayModeChange={setDisplayMode}
+        onMenuTypeChange={async () => {
+          await refreshRestaurantData()
+          await fetchMenuItems()
+        }}
+      />
+
+      {/* QR Code Section */}
       <Card>
         <CardHeader>
-          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-            <div>
-              <CardTitle className="text-lg sm:text-xl">Your Digital Menu</CardTitle>
-              <CardDescription className="text-sm">Manage your menu items and share with customers</CardDescription>
+          <CardTitle className="flex items-center gap-2">
+            <QrCode className="h-5 w-5" />
+            QR Code
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">Menu URL</span>
+              <Badge variant="outline">
+                {displayMode === 'items' ? 'Individual Items' : 'PDF Menu'}
+              </Badge>
             </div>
-            <div className="flex flex-row gap-2">
-              <Button variant="outline" size="sm" onClick={() => setQrDialogOpen(true)} className="">
-                <QrCode className="w-4 h-4 mr-2" />
-                QR Code
+            
+            <div className="p-3 bg-muted rounded-lg">
+              <code className="text-sm break-all">{menuUrl}</code>
+            </div>
+
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  navigator.clipboard.writeText(menuUrl)
+                  notify.success('Copied to clipboard!', 'Menu URL copied successfully')
+                }}
+                className="flex-1"
+              >
+                <Copy className="h-4 w-4 mr-2" />
+                Copy URL
               </Button>
-              <Link href={`/menu/${restaurant.slug}`} target="_blank" className=" ">
-                <Button variant="outline" size="sm" className=" ">
-                  <ExternalLink className="w-4 h-4 mr-2" />
-                  View Menu
-                </Button>
-              </Link>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => window.open(menuUrl, '_blank')}
+                className="flex-1"
+              >
+                <ExternalLink className="h-4 w-4 mr-2" />
+                Preview
+              </Button>
             </div>
           </div>
-        </CardHeader>
-        <CardContent>
-          <div className="bg-muted p-4 rounded-lg">
-            <p className="text-sm font-medium mb-2">Your menu URL:</p>
-            <code className="text-sm bg-background px-3 py-2 rounded border block break-all">{menuUrl}</code>
+
+          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-center gap-2 mb-2">
+              <QrCode className="h-4 w-4 text-blue-600" />
+              <span className="font-medium text-sm text-blue-800">Generate QR Code</span>
+            </div>
+            <p className="text-xs text-blue-700 mb-3">
+              Generate a QR code for this URL to place on tables, menus, or promotional materials.
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setQrDialogOpen(true)}
+              className="w-full"
+            >
+              <QrCode className="h-4 w-4 mr-2" />
+              Generate QR Code
+            </Button>
           </div>
         </CardContent>
       </Card>
 
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <h2 className="text-xl sm:text-2xl font-bold">Menu Items</h2>
-          {subscription?.plan_id === 'free' && (
-            <Badge variant="outline" className="text-xs">
-              {menuItems.length}/5 items
-            </Badge>
-          )}
-        </div>
-        <Button 
-          onClick={async () => {
-            const canAdd = await canAddMenuItem(restaurant.id)
-            if (canAdd) {
-              setDialogOpen(true)
-            } else {
-              notify.error(
-                'Menu item limit reached', 
-                'Upgrade to Pro or Business plan to add more menu items'
-              )
-            }
-          }}
-          className="w-full sm:w-auto"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Add Item
-        </Button>
-      </div>
-
-      {loading ? (
-        <div className="text-center py-12 text-muted-foreground">Loading menu items...</div>
-      ) : menuItems.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <p className="text-muted-foreground mb-4">No menu items yet. Add your first item to get started!</p>
+      {displayMode === 'items' && (
+        <>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <h2 className="text-xl sm:text-2xl font-bold">Menu Items</h2>
+              {subscription?.plan_id === 'free' && (
+                <Badge variant="outline" className="text-xs">
+                  {menuItems.length}/5 items
+                </Badge>
+              )}
+            </div>
             <Button 
               onClick={async () => {
-                const canAdd = await canAddMenuItem(restaurant.id)
+                const canAdd = await canAddMenuItem(currentRestaurant.id)
                 if (canAdd) {
                   setDialogOpen(true)
                 } else {
@@ -160,36 +198,67 @@ export function MenuManager({ restaurant }: MenuManagerProps) {
                   )
                 }
               }}
+              className="w-full sm:w-auto"
             >
               <Plus className="w-4 h-4 mr-2" />
-              Add First Item
+              Add Item
             </Button>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="space-y-6 sm:space-y-8">
-          {Object.entries(groupedItems).map(([category, items]) => (
-            <div key={category}>
-              <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 capitalize">{category}</h3>
-              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-                {items.map((item) => (
-                  <MenuItemCard
-                    key={item.id}
-                    item={{ ...item, restaurant_id: restaurant.id }}
-                    currency={currentCurrency}
-                    onUpdate={fetchMenuItems}
-                  />
-                ))}
-              </div>
+          </div>
+        </>
+      )}
+
+      {displayMode === 'items' && (
+        <>
+          {loading ? (
+            <div className="text-center py-12 text-muted-foreground">Loading menu items...</div>
+          ) : menuItems.length === 0 ? (
+            <Card>
+              <CardContent className="py-12 text-center">
+                <p className="text-muted-foreground mb-4">No menu items yet. Add your first item to get started!</p>
+                <Button 
+                  onClick={async () => {
+                    const canAdd = await canAddMenuItem(currentRestaurant.id)
+                    if (canAdd) {
+                      setDialogOpen(true)
+                    } else {
+                      notify.error(
+                        'Menu item limit reached', 
+                        'Upgrade to Pro or Business plan to add more menu items'
+                      )
+                    }
+                  }}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add First Item
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-6 sm:space-y-8">
+              {Object.entries(groupedItems).map(([category, items]) => (
+                <div key={category}>
+                  <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 capitalize">{category}</h3>
+                  <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                    {items.map((item) => (
+                      <MenuItemCard
+                        key={item.id}
+                        item={{ ...item, restaurant_id: currentRestaurant.id }}
+                        currency={currentCurrency}
+                        onUpdate={fetchMenuItems}
+                      />
+                    ))}
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          )}
+        </>
       )}
 
       <AddMenuItemDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
-        restaurantId={restaurant.id}
+        restaurantId={currentRestaurant.id}
         onSuccess={fetchMenuItems}
       />
 
@@ -197,7 +266,7 @@ export function MenuManager({ restaurant }: MenuManagerProps) {
         open={qrDialogOpen}
         onOpenChange={setQrDialogOpen}
         menuUrl={menuUrl}
-        restaurantName={restaurant.name}
+        restaurantName={currentRestaurant.name}
       />
     </div>
   )

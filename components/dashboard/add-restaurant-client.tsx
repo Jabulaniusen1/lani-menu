@@ -8,11 +8,11 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { FileUpload } from "@/components/ui/file-upload"
+import { PdfUpload } from "@/components/ui/pdf-upload"
 import { SimpleCurrencySelector } from "@/components/ui/simple-currency-selector"
 import { getSupabaseBrowserClient } from "@/lib/supabase/client"
 import { uploadFile, generateFilePath } from "@/lib/storage"
 import { useNotification } from "@/hooks/use-notification"
-import { useSubscription } from "@/contexts/subscription-context"
 import { Loader2, Store, AlertCircle } from "lucide-react"
 
 interface AddRestaurantClientProps {
@@ -22,11 +22,12 @@ interface AddRestaurantClientProps {
 export function AddRestaurantClient({ userId }: AddRestaurantClientProps) {
   const router = useRouter()
   const { notify } = useNotification()
-  const { canAddRestaurant } = useSubscription()
   const [name, setName] = useState("")
   const [description, setDescription] = useState("")
   const [currency, setCurrency] = useState("USD")
   const [logoFile, setLogoFile] = useState<File | null>(null)
+  const [pdfFile, setPdfFile] = useState<File | null>(null)
+  const [menuType, setMenuType] = useState<'items' | 'pdf'>('items')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -47,20 +48,10 @@ export function AddRestaurantClient({ userId }: AddRestaurantClientProps) {
     setError(null)
 
     try {
-      // Check if user can add more restaurants
-      const canAdd = await canAddRestaurant()
-      if (!canAdd) {
-        notify.error(
-          'Restaurant limit reached',
-          'Upgrade to Pro or Business plan to add more restaurants'
-        )
-        setLoading(false)
-        return
-      }
-      
       const supabase = getSupabaseBrowserClient()
       const slug = generateSlug(name)
       let logoUrl: string | null = null
+      let pdfUrl: string | null = null
 
       // Upload logo if provided
       if (logoFile) {
@@ -74,6 +65,18 @@ export function AddRestaurantClient({ userId }: AddRestaurantClientProps) {
         logoUrl = url
       }
 
+      // Upload PDF menu if provided
+      if (menuType === 'pdf' && pdfFile) {
+        const filePath = generateFilePath(userId, "pdf-menu", pdfFile.name)
+        const { url, error: uploadError } = await uploadFile(pdfFile, "restaurant-assets", filePath)
+        
+        if (uploadError) {
+          throw new Error(`Failed to upload PDF menu: ${uploadError}`)
+        }
+        
+        pdfUrl = url
+      }
+
       // First, insert the restaurant
       const { data: insertData, error: insertError } = await supabase.from("restaurants").insert({
         user_id: userId,
@@ -81,6 +84,8 @@ export function AddRestaurantClient({ userId }: AddRestaurantClientProps) {
         description,
         currency,
         logo_url: logoUrl,
+        pdf_menu_url: pdfUrl,
+        menu_type: menuType,
         slug,
       }).select()
 
@@ -182,6 +187,56 @@ export function AddRestaurantClient({ userId }: AddRestaurantClientProps) {
                   disabled={loading}
                 />
               </div>
+
+              <div className="space-y-2">
+                <Label>Menu Type</Label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setMenuType('items')}
+                    className={`p-3 rounded-lg border text-left transition-colors ${
+                      menuType === 'items'
+                        ? 'border-primary bg-primary/5 text-primary'
+                        : 'border-muted-foreground/25 hover:border-muted-foreground/50'
+                    }`}
+                    disabled={loading}
+                  >
+                    <div className="font-medium text-sm">Individual Items</div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      Add menu items one by one
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMenuType('pdf')}
+                    className={`p-3 rounded-lg border text-left transition-colors ${
+                      menuType === 'pdf'
+                        ? 'border-primary bg-primary/5 text-primary'
+                        : 'border-muted-foreground/25 hover:border-muted-foreground/50'
+                    }`}
+                    disabled={loading}
+                  >
+                    <div className="font-medium text-sm">PDF Menu</div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      Upload your existing menu PDF
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              {menuType === 'pdf' && (
+                <div className="space-y-2">
+                  <Label>PDF Menu</Label>
+                  <PdfUpload
+                    onFileSelect={setPdfFile}
+                    selectedFile={pdfFile}
+                    disabled={loading}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Upload your restaurant's menu as a PDF file. Max size: 10MB
+                  </p>
+                </div>
+              )}
 
               <FileUpload
                 label="Restaurant Logo (Optional)"

@@ -23,7 +23,7 @@ export const SUBSCRIPTION_PLANS: PaymentPlan[] = [
     interval: 'monthly',
     features: [
       'Up to 5 menu items',
-      '1 restaurant location',
+      'Unlimited restaurant locations',
       'Basic QR code generation',
       'Standard menu design',
       'Email support'
@@ -42,7 +42,7 @@ export const SUBSCRIPTION_PLANS: PaymentPlan[] = [
     interval: 'yearly',
     features: [
       'Unlimited menu items',
-      'Up to 3 restaurant locations',
+      'Unlimited restaurant locations',
       'Advanced QR code customization',
       'Premium menu designs',
       'Custom branding',

@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation"
 import { getSupabaseServerClient } from "@/lib/supabase/server"
 import { PublicMenu } from "@/components/menu/public-menu"
+import { PdfMenuViewer } from "@/components/menu/pdf-menu-viewer"
 
 interface MenuPageProps {
   params: Promise<{
@@ -19,7 +20,12 @@ export default async function MenuPage({ params }: MenuPageProps) {
     notFound()
   }
 
-  // Fetch available menu items
+  // Check if restaurant uses PDF menu
+  if (restaurant.menu_type === 'pdf' && restaurant.pdf_menu_url) {
+    return <PdfMenuViewer restaurant={restaurant} />
+  }
+
+  // Fetch available menu items for regular menu
   const { data: menuItems } = await supabase
     .from("menu_items")
     .select("*")

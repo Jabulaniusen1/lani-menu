@@ -141,6 +141,8 @@ export function PdfMenuViewer({ restaurant }: PdfMenuViewerProps) {
                       setPdfError(true)
                       setIsLoading(false)
                     }}
+                    sandbox="allow-same-origin allow-scripts allow-popups"
+                    allow="fullscreen"
                   />
                 </>
               )}

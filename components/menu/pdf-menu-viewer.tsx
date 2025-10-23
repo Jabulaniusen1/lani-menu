@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect } from "react"
+import { useState, useEffect } from "react"
 
 interface Restaurant {
   id: string
@@ -17,17 +17,22 @@ interface PdfMenuViewerProps {
 }
 
 export function PdfMenuViewer({ restaurant }: PdfMenuViewerProps) {
+  const [isLaptopScreen, setIsLaptopScreen] = useState(false)
+
   useEffect(() => {
-    // Remove any existing scrollbars and set full screen
-    document.body.style.overflow = 'hidden'
-    document.body.style.margin = '0'
-    document.body.style.padding = '0'
-    
+    const checkScreenSize = () => {
+      const width = window.innerWidth
+      const height = window.innerHeight
+      // Check if it's a laptop screen (typically 1024px+ width and not mobile)
+      const isLaptop = width >= 1024 && width <= 1440 && height >= 600
+      setIsLaptopScreen(isLaptop)
+    }
+
+    checkScreenSize()
+    window.addEventListener('resize', checkScreenSize)
+
     return () => {
-      // Restore scrollbars when component unmounts
-      document.body.style.overflow = 'auto'
-      document.body.style.margin = ''
-      document.body.style.padding = ''
+      window.removeEventListener('resize', checkScreenSize)
     }
   }, [])
 
@@ -44,26 +49,63 @@ export function PdfMenuViewer({ restaurant }: PdfMenuViewerProps) {
     )
   }
 
+  // Show laptop restriction message
+  if (isLaptopScreen) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+        <div className="max-w-md mx-auto text-center">
+          <div className="bg-white rounded-lg shadow-lg p-8">
+            <div className="mb-6">
+              <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <h2 className="text-xl font-semibold text-gray-900 mb-2">Mobile Menu</h2>
+              <p className="text-gray-600">
+                This menu is optimized for mobile devices. Please scan the QR code with your phone to view the menu.
+              </p>
+            </div>
+            <div className="bg-gray-50 rounded-lg p-4">
+              <p className="text-sm text-gray-500">
+                For the best experience, use your mobile device to view this digital menu.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="fixed inset-0 bg-background">
-      {/* Full Screen PDF */}
-      <iframe
-        src={`${restaurant.pdf_menu_url}#toolbar=0&navpanes=0&scrollbar=1&zoom=FitH`}
-        className="w-full h-full border-0"
-        title={`${restaurant.name} Menu PDF`}
-      />
+    <div className="min-h-screen bg-gray-100 p-4">
+      {/* Slim Bezel Container */}
+      <div className="max-w-6xl mx-auto">
+        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+          {/* PDF Container with slim bezel */}
+          <div className="p-2 bg-gray-200">
+            <div className="bg-white rounded shadow-sm overflow-hidden">
+              <iframe
+                src={`${restaurant.pdf_menu_url}#toolbar=0&navpanes=0&scrollbar=1&zoom=FitH`}
+                className="w-full h-[90vh] border-0"
+                title={`${restaurant.name} Menu PDF`}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
       
-      {/* Powered by Lanimenu - Fixed at bottom */}
-      <div className="fixed bottom-4 right-4 z-50">
+      {/* Footer with Powered by Lanimenu */}
+      <footer className="mt-4 text-center">
         <a 
           href="https://lanimenu.live" 
           target="_blank" 
           rel="noopener noreferrer"
-          className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+          className="text-sm text-muted-foreground hover:text-orange-600 transition-colors"
         >
-          Powered by Lanimenu
+          Powered by <span className="text-orange-600 font-medium">Lanimenu</span>
         </a>
-      </div>
+      </footer>
     </div>
   )
 }

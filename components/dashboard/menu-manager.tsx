@@ -46,9 +46,14 @@ export function MenuManager({ restaurant }: MenuManagerProps) {
   const [qrDialogOpen, setQrDialogOpen] = useState(false)
   const [currentCurrency, setCurrentCurrency] = useState(restaurant.currency)
   const [currentRestaurant, setCurrentRestaurant] = useState(restaurant)
-  const [displayMode, setDisplayMode] = useState<'items' | 'pdf'>('items')
+  const [displayMode, setDisplayMode] = useState<'items' | 'pdf'>(restaurant.menu_type as 'items' | 'pdf')
   const { subscription, canAddMenuItem } = useSubscription()
   const { notify } = useNotification()
+
+  // Sync display mode when restaurant data changes
+  useEffect(() => {
+    setDisplayMode(currentRestaurant.menu_type as 'items' | 'pdf')
+  }, [currentRestaurant.menu_type])
 
   const fetchMenuItems = async () => {
     const supabase = getSupabaseBrowserClient()

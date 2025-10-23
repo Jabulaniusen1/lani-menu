@@ -34,6 +34,40 @@ export async function uploadFile(
   }
 }
 
+// New function specifically for PDF uploads
+export async function uploadPdfFile(
+  file: File,
+  path: string
+): Promise<{ url: string; error: null } | { url: null; error: string }> {
+  try {
+    const supabase = getSupabaseBrowserClient()
+
+    // Upload PDF to "pdfs" bucket
+    const { data, error } = await supabase.storage
+      .from("pdfs")
+      .upload(path, file, {
+        cacheControl: "3600",
+        upsert: false,
+      })
+
+    if (error) {
+      return { url: null, error: error.message }
+    }
+
+    // Get public URL from "pdfs" bucket
+    const { data: urlData } = supabase.storage
+      .from("pdfs")
+      .getPublicUrl(data.path)
+
+    return { url: urlData.publicUrl, error: null }
+  } catch (error) {
+    return {
+      url: null,
+      error: error instanceof Error ? error.message : "Failed to upload PDF",
+    }
+  }
+}
+
 export async function deleteFile(bucket: string, path: string): Promise<{ error: string | null }> {
   try {
     const supabase = getSupabaseBrowserClient()

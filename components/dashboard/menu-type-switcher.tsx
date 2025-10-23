@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { PdfUpload } from "@/components/ui/pdf-upload"
 import { getSupabaseBrowserClient } from "@/lib/supabase/client"
-import { uploadFile, generateFilePath } from "@/lib/storage"
+import { uploadPdfFile, generateFilePath } from "@/lib/storage"
 import { useNotification } from "@/hooks/use-notification"
 import { 
   FileText, 
@@ -34,12 +34,17 @@ interface MenuTypeSwitcherProps {
 }
 
 export function MenuTypeSwitcher({ restaurant, onMenuTypeChange, displayMode, onDisplayModeChange }: MenuTypeSwitcherProps) {
-  const [menuType, setMenuType] = useState<'items' | 'pdf'>('items')
+  const [menuType, setMenuType] = useState<'items' | 'pdf'>(restaurant.menu_type as 'items' | 'pdf')
   const [pdfFile, setPdfFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
   const [pendingMenuType, setPendingMenuType] = useState<'items' | 'pdf' | null>(null)
   const { notify } = useNotification()
+
+  // Sync menu type when restaurant data changes
+  useEffect(() => {
+    setMenuType(restaurant.menu_type as 'items' | 'pdf')
+  }, [restaurant.menu_type])
 
   const handleMenuTypeChange = (newType: 'items' | 'pdf') => {
     if (newType === menuType) return
@@ -66,10 +71,10 @@ export function MenuTypeSwitcher({ restaurant, onMenuTypeChange, displayMode, on
 
       if (error) throw error
 
-      notify.success(
-        'Menu type updated',
-        `Switched to ${pendingMenuType === 'items' ? 'individual menu items' : 'PDF menu'}`
-      )
+          notify.success(
+            'Menu type updated',
+            `Switched to ${pendingMenuType === 'items' ? 'individual menu items' : 'uploaded menu'}`
+          )
 
       onMenuTypeChange()
     } catch (error) {
@@ -96,15 +101,15 @@ export function MenuTypeSwitcher({ restaurant, onMenuTypeChange, displayMode, on
     try {
       const supabase = getSupabaseBrowserClient()
       
-      // Upload PDF file
+      // Upload PDF to Supabase Storage "pdfs" bucket
       const filePath = generateFilePath(restaurant.id, "pdf-menu", pdfFile.name)
-      const { url, error: uploadError } = await uploadFile(pdfFile, "restaurant-assets", filePath)
+      const { url, error: uploadError } = await uploadPdfFile(pdfFile, filePath)
       
       if (uploadError) {
         throw new Error(`Failed to upload PDF: ${uploadError}`)
       }
 
-      // Update restaurant with PDF URL
+      // Update restaurant with PDF URL and menu_type
       const { error: updateError } = await supabase
         .from('restaurants')
         .update({ 
@@ -118,11 +123,11 @@ export function MenuTypeSwitcher({ restaurant, onMenuTypeChange, displayMode, on
       setMenuType('pdf')
       setPdfFile(null)
       
-      notify.success('PDF menu uploaded successfully!', 'Your menu is now live')
+      notify.success('Uploaded menu uploaded successfully!', 'Your menu is now live')
       onMenuTypeChange()
     } catch (error) {
       console.error('Error uploading PDF:', error)
-      notify.error('Failed to upload PDF', 'Please try again')
+      notify.error('Failed to upload menu', 'Please try again')
     } finally {
       setUploading(false)
     }
@@ -180,7 +185,7 @@ export function MenuTypeSwitcher({ restaurant, onMenuTypeChange, displayMode, on
                   <FileText className="h-5 w-5 text-red-600" />
                 </div>
                 <div className="flex-1">
-                  <div className="font-medium">PDF Menu</div>
+                  <div className="font-medium">Uploaded Menu</div>
                   <div className="text-sm text-muted-foreground">
                     Upload your existing menu PDF
                   </div>
@@ -196,7 +201,7 @@ export function MenuTypeSwitcher({ restaurant, onMenuTypeChange, displayMode, on
             <div className="p-4 bg-muted/50 rounded-lg">
               <div className="flex items-center gap-2 mb-3">
                 <FileText className="h-4 w-4" />
-                <span className="font-medium text-sm">PDF Menu</span>
+                <span className="font-medium text-sm">Uploaded Menu</span>
                 {restaurant.pdf_menu_url && (
                   <Badge variant="secondary" className="text-xs">Active</Badge>
                 )}
@@ -206,14 +211,14 @@ export function MenuTypeSwitcher({ restaurant, onMenuTypeChange, displayMode, on
                 <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
                   <p className="text-sm text-green-800 mb-2">Current PDF is live</p>
                   <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => window.open(restaurant.pdf_menu_url!, '_blank')}
-                    >
-                      <ExternalLink className="h-4 w-4 mr-2" />
-                      Preview
-                    </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => window.open(restaurant.pdf_menu_url!, '_blank')}
+                        >
+                          <ExternalLink className="h-4 w-4 mr-2" />
+                          View Menu
+                        </Button>
                     <Button
                       variant="outline"
                       size="sm"
@@ -253,7 +258,7 @@ export function MenuTypeSwitcher({ restaurant, onMenuTypeChange, displayMode, on
                   ) : (
                     <>
                       <Upload className="h-4 w-4 mr-2" />
-                      {restaurant.pdf_menu_url ? 'Replace PDF' : 'Upload PDF'}
+                          {restaurant.pdf_menu_url ? 'Replace Menu' : 'Upload Menu'}
                     </>
                   )}
                 </Button>
@@ -279,9 +284,9 @@ export function MenuTypeSwitcher({ restaurant, onMenuTypeChange, displayMode, on
                 Are you sure you want to switch menu types? Your menu is live and this might affect your customers.
               </p>
               <div className="p-3 bg-muted rounded-lg">
-                <p className="text-sm font-medium">
-                  Switching to: {pendingMenuType === 'items' ? 'Individual Menu Items' : 'PDF Menu'}
-                </p>
+                    <p className="text-sm font-medium">
+                      Switching to: {pendingMenuType === 'items' ? 'Individual Menu Items' : 'Uploaded Menu'}
+                    </p>
                 <p className="text-xs text-muted-foreground mt-1">
                   This will change how your menu appears to customers
                 </p>

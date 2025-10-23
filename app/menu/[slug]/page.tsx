@@ -1,7 +1,6 @@
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
 import { getSupabaseServerClient } from "@/lib/supabase/server"
 import { PublicMenu } from "@/components/menu/public-menu"
-import { PdfMenuViewer } from "@/components/menu/pdf-menu-viewer"
 
 interface MenuPageProps {
   params: Promise<{
@@ -20,9 +19,9 @@ export default async function MenuPage({ params }: MenuPageProps) {
     notFound()
   }
 
-  // Check if restaurant uses PDF menu
+  // If restaurant uses uploaded menu, redirect to the PDF URL
   if (restaurant.menu_type === 'pdf' && restaurant.pdf_menu_url) {
-    return <PdfMenuViewer restaurant={restaurant} />
+    redirect(restaurant.pdf_menu_url)
   }
 
   // Fetch available menu items for regular menu

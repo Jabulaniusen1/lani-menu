@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { QrCode, Zap, Smartphone, BarChart3, Globe, Mail, Phone, MapPin, Facebook, Instagram, MessageCircle, Menu, X, Utensils, Coffee, Cake, Hotel, Store, Wine } from "lucide-react"
 import Image from "next/image"
+import { Analytics } from "@vercel/analytics/next"
 
 // Typing animation component
 function TypingText() {
@@ -723,6 +724,7 @@ export default function HomePage() {
           </div>
         </div>
       </footer>
+      <Analytics />
     </div>
   )
 }

@@ -1,12 +1,16 @@
 "use client"
 
 import Link from "next/link"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { QrCode, Zap, Smartphone, BarChart3, Globe, Mail, Phone, MapPin, Facebook, Instagram, MessageCircle, Menu, X, Utensils, Coffee, Cake, Hotel, Store, Wine } from "lucide-react"
+import { QrCode, Zap, Smartphone, BarChart3, Globe, Mail, Phone, MapPin, Menu, X, Utensils, Coffee, Cake, Hotel, Store, Wine } from "lucide-react"
 import Image from "next/image"
 import { Analytics } from "@vercel/analytics/next"
+import { gsap } from "gsap"
+import { ScrollTrigger } from "gsap/ScrollTrigger"
+
+gsap.registerPlugin(ScrollTrigger)
 
 // Typing animation component
 function TypingText() {
@@ -47,10 +51,114 @@ function TypingText() {
 
 export default function HomePage() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const heroRef = useRef<HTMLDivElement>(null)
+  const featuresRef = useRef<HTMLDivElement>(null)
+  const howItWorksRef = useRef<HTMLDivElement>(null)
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen)
   }
+
+  useEffect(() => {
+    // Hero section animation
+    if (heroRef.current) {
+      gsap.from(heroRef.current.children, {
+        opacity: 0,
+        y: 50,
+        duration: 1,
+        stagger: 0.2,
+        ease: "power3.out"
+      })
+    }
+
+    // Features cards animation
+    if (featuresRef.current) {
+      const cards = featuresRef.current.querySelectorAll('[data-animate="card"]')
+      cards.forEach((card, index) => {
+        gsap.from(card, {
+          opacity: 0,
+          y: 60,
+          duration: 0.8,
+          delay: index * 0.1,
+          scrollTrigger: {
+            trigger: card,
+            start: "top 85%",
+            toggleActions: "play none none none"
+          },
+          ease: "power2.out"
+        })
+      })
+    }
+
+    // How It Works section
+    if (howItWorksRef.current) {
+      const steps = howItWorksRef.current.querySelectorAll('[data-animate="step"]')
+      steps.forEach((step, index) => {
+        gsap.from(step, {
+          opacity: 0,
+          scale: 0.9,
+          y: 40,
+          duration: 0.9,
+          delay: index * 0.15,
+          scrollTrigger: {
+            trigger: step,
+            start: "top 80%",
+            toggleActions: "play none none none"
+          },
+          ease: "back.out(1.2)"
+        })
+      })
+    }
+
+    // Floating animation for hero image
+    const heroImage = document.querySelector('[data-animate="hero-image"]')
+    if (heroImage) {
+      gsap.to(heroImage, {
+        y: -20,
+        duration: 2,
+        repeat: -1,
+        yoyo: true,
+        ease: "power1.inOut"
+      })
+    }
+
+    // Fade in animations for sections
+    const sections = document.querySelectorAll('[data-animate="section"]')
+    sections.forEach((section) => {
+      gsap.from(section, {
+        opacity: 0,
+        y: 30,
+        duration: 1,
+        scrollTrigger: {
+          trigger: section,
+          start: "top 85%",
+          toggleActions: "play none none none"
+        },
+        ease: "power2.out"
+      })
+    })
+
+    // Stagger animation for benefit cards
+    const benefitCards = document.querySelectorAll('[data-animate="benefit"]')
+    benefitCards.forEach((card, index) => {
+      gsap.from(card, {
+        opacity: 0,
+        x: -30,
+        duration: 0.7,
+        delay: index * 0.1,
+        scrollTrigger: {
+          trigger: card,
+          start: "top 85%",
+          toggleActions: "play none none none"
+        },
+        ease: "power2.out"
+      })
+    })
+
+    return () => {
+      ScrollTrigger.getAll().forEach(trigger => trigger.kill())
+    }
+  }, [])
 
   return (
     <div className="min-h-screen bg-background">
@@ -132,14 +240,18 @@ export default function HomePage() {
         <div className="container mx-auto px-4 max-w-7xl relative z-10">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Left Content */}
-            <div className="text-center lg:text-left space-y-4 sm:space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-1000">
+            <div ref={heroRef} className="text-center lg:text-left space-y-4 sm:space-y-6">
+              <div>
               <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight text-balance">
-                Transform Your <TypingText /> Menu Into a Digital Experience
+                  Digital QR Code Menus for Your <TypingText />
               </h1>
+              </div>
+              <div>
               <p className="text-base sm:text-lg md:text-xl text-muted-foreground leading-relaxed">
                 Create beautiful digital menus accessible via QR codes. Update in real-time, delight your customers, and
                 modernize your business.
               </p>
+              </div>
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start pt-4">
                 <Link href="/sign-up">
                   <Button size="lg" className="h-10 sm:h-12 px-6 sm:px-8 text-sm sm:text-base w-full sm:w-auto hover:scale-105 transition-transform">
@@ -155,8 +267,8 @@ export default function HomePage() {
             </div>
 
             {/* Right Content - Hero Image */}
-            <div className="relative animate-in fade-in slide-in-from-right-8 duration-1000 delay-300">
-              <div className="relative mx-auto max-w-md lg:max-w-lg">
+            <div className="relative">
+              <div className="relative mx-auto max-w-md lg:max-w-lg" data-animate="hero-image">
                 {/* Uploaded Hero Image */}
                 <div className="relative">
                   <Image
@@ -180,126 +292,242 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Demo Video */}
-      {/* <section className="container mx-auto px-4 py-12 sm:py-20 max-w-7xl">
-        <div className="text-center mb-8 sm:mb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
-          <h2 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">See It In Action</h2>
-          <p className="text-muted-foreground text-base sm:text-lg">Watch how easy it is to create and manage your digital menu</p>
+      {/* How It Works */}
+      <section ref={howItWorksRef} className="container mx-auto px-4 py-12 sm:py-20 max-w-7xl" data-animate="section">
+        <div className="text-center mb-8 sm:mb-12">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">How It Works</h2>
+          <p className="text-muted-foreground text-base sm:text-lg max-w-2xl mx-auto">
+            Three simple steps to transform your restaurant menu into a modern digital experience
+          </p>
         </div>
 
-        <div className="max-w-4xl mx-auto animate-in fade-in zoom-in-95 duration-1000 delay-300">
-          <div className="relative aspect-video bg-secondary/50 rounded-xl border-2 border-border overflow-hidden shadow-2xl">
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-center space-y-4">
-                <div className="bg-primary/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto">
-                  <div className="w-0 h-0 border-t-[12px] border-t-transparent border-l-[20px] border-l-primary border-b-[12px] border-b-transparent ml-1" />
+        <div className="grid md:grid-cols-3 gap-8 sm:gap-12 mb-12 sm:mb-16">
+          {/* Step 1 */}
+          <div className="text-center space-y-4" data-animate="step">
+            <div className="relative mx-auto w-full max-w-sm">
+              <div className="bg-primary/10 rounded-2xl p-6 sm:p-8 shadow-lg overflow-hidden">
+                <Image
+                  src="/create-menu.png"
+                  alt="Create Your Digital Menu Dashboard"
+                  width={400}
+                  height={300}
+                  className="w-full h-auto rounded-xl object-cover"
+                />
+              </div>
+              <div className="absolute -top-4 -left-4 bg-primary text-primary-foreground w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center font-bold text-lg sm:text-xl shadow-lg">
+                1
+              </div>
                 </div>
-                <p className="text-muted-foreground">Embed your demo video here</p>
-                <p className="text-sm text-muted-foreground/70">
-                  Replace this placeholder with your video embed code (YouTube, Vimeo, etc.)
-                </p>
+            <div className="space-y-2">
+              <h3 className="text-xl sm:text-2xl font-semibold">Create Your Menu</h3>
+              <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
+                Sign up and build your digital menu in minutes. Add items, prices, descriptions, and photos. Organize by categories and customize the design to match your brand.
+              </p>
+            </div>
+          </div>
+
+          {/* Step 2 */}
+          <div className="text-center space-y-4" data-animate="step">
+            <div className="relative mx-auto w-full max-w-sm">
+              <div className="bg-primary/10 rounded-2xl p-6 sm:p-8 shadow-lg overflow-hidden">
+                <Image
+                  src="/place.jpg"
+                  alt="QR Code Menu Stand on Restaurant Table"
+                  width={400}
+                  height={300}
+                  className="w-full h-auto rounded-xl object-cover"
+                />
+              </div>
+              <div className="absolute -top-4 -left-4 bg-primary text-primary-foreground w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center font-bold text-lg sm:text-xl shadow-lg">
+                2
               </div>
             </div>
-            Example: Uncomment and add your video URL
-            <iframe
-              className="absolute inset-0 w-full h-full"
-              src="https://www.youtube.com/embed/YOUR_VIDEO_ID"
-              title="Demo Video"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-            />
-            
+            <div className="space-y-2">
+              <h3 className="text-xl sm:text-2xl font-semibold">Print & Place QR Codes</h3>
+              <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
+                Download and print your unique QR code. Place it on tables, walls, or countertops. Customers scan with any smartphone camera—no app needed.
+              </p>
+            </div>
+          </div>
+
+          {/* Step 3 */}
+          <div className="text-center space-y-4" data-animate="step">
+            <div className="relative mx-auto w-full max-w-sm">
+              <div className="bg-primary/10 rounded-2xl p-6 sm:p-8 shadow-lg overflow-hidden">
+                <Image
+                  src="/users-scan.jpg"
+                  alt="Customer Scanning QR Code with Smartphone"
+                  width={400}
+                  height={300}
+                  className="w-full h-auto rounded-xl object-cover"
+                />
+              </div>
+              <div className="absolute -top-4 -left-4 bg-primary text-primary-foreground w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center font-bold text-lg sm:text-xl shadow-lg">
+                3
+              </div>
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-xl sm:text-2xl font-semibold">Customers View Instantly</h3>
+              <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
+                When customers scan, they instantly see your beautiful menu on their phone. Update prices or add items anytime—changes appear immediately for all customers.
+              </p>
+            </div>
           </div> 
         </div>
-      </section> */}
+
+        {/* Benefits Grid */}
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mt-12">
+          <Card className="text-center p-4 sm:p-6 hover:shadow-lg transition-all duration-300" data-animate="benefit">
+            <CardContent className="space-y-3">
+              <div className="bg-green-100 dark:bg-green-900/20 w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto">
+                <Zap className="w-6 h-6 sm:w-8 sm:h-8 text-green-600 dark:text-green-400" />
+              </div>
+              <h4 className="font-semibold text-sm sm:text-base">Instant Updates</h4>
+              <p className="text-xs sm:text-sm text-muted-foreground">Change your menu in seconds, no reprinting needed</p>
+            </CardContent>
+          </Card>
+
+          <Card className="text-center p-4 sm:p-6 hover:shadow-lg transition-all duration-300" data-animate="benefit">
+            <CardContent className="space-y-3">
+              <div className="bg-blue-100 dark:bg-blue-900/20 w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto">
+                <Smartphone className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 dark:text-blue-400" />
+              </div>
+              <h4 className="font-semibold text-sm sm:text-base">No App Required</h4>
+              <p className="text-xs sm:text-sm text-muted-foreground">Works with any smartphone camera</p>
+            </CardContent>
+          </Card>
+
+          <Card className="text-center p-4 sm:p-6 hover:shadow-lg transition-all duration-300" data-animate="benefit">
+            <CardContent className="space-y-3">
+              <div className="bg-purple-100 dark:bg-purple-900/20 w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto">
+                <QrCode className="w-6 h-6 sm:w-8 sm:h-8 text-purple-600 dark:text-purple-400" />
+              </div>
+              <h4 className="font-semibold text-sm sm:text-base">Contactless</h4>
+              <p className="text-xs sm:text-sm text-muted-foreground">Safe, hygienic dining experience</p>
+            </CardContent>
+          </Card>
+
+          <Card className="text-center p-4 sm:p-6 hover:shadow-lg transition-all duration-300" data-animate="benefit">
+            <CardContent className="space-y-3">
+              <div className="bg-orange-100 dark:bg-orange-900/20 w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto">
+                <BarChart3 className="w-6 h-6 sm:w-8 sm:h-8 text-orange-600 dark:text-orange-400" />
+              </div>
+              <h4 className="font-semibold text-sm sm:text-base">Cost Effective</h4>
+              <p className="text-xs sm:text-sm text-muted-foreground">Save on printing and menu redesign costs</p>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
 
       {/* Features */}
-      <section className="container mx-auto px-4 py-12 sm:py-20 max-w-7xl">
-        <div className="text-center mb-8 sm:mb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
-          <h2 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">Everything You Need</h2>
-          <p className="text-muted-foreground text-base sm:text-lg">Powerful features to manage your digital menu</p>
+      <section ref={featuresRef} className="container mx-auto px-4 py-12 sm:py-20 max-w-7xl" data-animate="section">
+        <div className="text-center mb-8 sm:mb-12">
+          <h2 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">Everything You Need to Succeed</h2>
+          <p className="text-muted-foreground text-base sm:text-lg max-w-2xl mx-auto">
+            Lanimenu provides all the tools you need to create, manage, and share your digital menu. From QR code generation to real-time updates, we've got you covered.
+          </p>
         </div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-          <Card className="animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100 group hover:shadow-xl hover:-translate-y-2 transition-all duration-300">
+          <Card className="group hover:shadow-xl hover:-translate-y-2 transition-all duration-300" data-animate="card">
             <CardContent className="p-4 sm:p-6 space-y-3 sm:space-y-4">
               <div className="bg-primary/10 w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center group-hover:scale-110 group-hover:bg-primary/20 transition-all duration-300">
                 <QrCode className="w-5 h-5 sm:w-6 sm:h-6 text-primary group-hover:animate-pulse" />
               </div>
               <h3 className="text-lg sm:text-xl font-semibold group-hover:text-primary transition-colors duration-300">QR Code Generation</h3>
               <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
-                Generate beautiful QR codes for your menu. Print and place them anywhere in your restaurant.
+                Instantly generate high-quality QR codes for your menu. Download in multiple formats (PNG, SVG, PDF) and print on any material. Each QR code is unique to your restaurant and links directly to your live menu.
               </p>
             </CardContent>
           </Card>
 
-          <Card className="animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200 group hover:shadow-xl hover:-translate-y-2 transition-all duration-300">
+          <Card className="group hover:shadow-xl hover:-translate-y-2 transition-all duration-300" data-animate="card">
             <CardContent className="p-4 sm:p-6 space-y-3 sm:space-y-4">
               <div className="bg-primary/10 w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center group-hover:scale-110 group-hover:bg-primary/20 transition-all duration-300">
                 <Zap className="w-5 h-5 sm:w-6 sm:h-6 text-primary group-hover:animate-pulse" />
               </div>
               <h3 className="text-lg sm:text-xl font-semibold group-hover:text-primary transition-colors duration-300">Real-time Updates</h3>
               <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
-                Update your menu instantly. Changes reflect immediately for all customers viewing your menu.
+                Update prices, add new items, mark items as sold out, or change descriptions instantly from your dashboard. All changes appear immediately for customers—no waiting, no delays. Perfect for daily specials or seasonal menus.
               </p>
             </CardContent>
           </Card>
 
-          <Card className="animate-in fade-in slide-in-from-bottom-8 duration-700 delay-300 group hover:shadow-xl hover:-translate-y-2 transition-all duration-300">
+          <Card className="group hover:shadow-xl hover:-translate-y-2 transition-all duration-300" data-animate="card">
             <CardContent className="p-4 sm:p-6 space-y-3 sm:space-y-4">
               <div className="bg-primary/10 w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center group-hover:scale-110 group-hover:bg-primary/20 transition-all duration-300">
                 <Smartphone className="w-5 h-5 sm:w-6 sm:h-6 text-primary group-hover:animate-pulse" />
               </div>
               <h3 className="text-lg sm:text-xl font-semibold group-hover:text-primary transition-colors duration-300">Mobile Optimized</h3>
               <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
-                Beautiful design that works perfectly on any device. Your customers will love the experience.
+                Your menu looks stunning on every device—smartphones, tablets, and desktops. Fast loading, easy navigation, and beautiful layouts (Grid or List view) ensure customers have a great experience browsing your menu.
               </p>
             </CardContent>
           </Card>
 
-          <Card className="animate-in fade-in slide-in-from-bottom-8 duration-700 delay-[400ms] group hover:shadow-xl hover:-translate-y-2 transition-all duration-300">
+          <Card className="group hover:shadow-xl hover:-translate-y-2 transition-all duration-300" data-animate="card">
             <CardContent className="p-4 sm:p-6 space-y-3 sm:space-y-4">
               <div className="bg-primary/10 w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center group-hover:scale-110 group-hover:bg-primary/20 transition-all duration-300">
                 <BarChart3 className="w-5 h-5 sm:w-6 sm:h-6 text-primary group-hover:animate-pulse" />
               </div>
               <h3 className="text-lg sm:text-xl font-semibold group-hover:text-primary transition-colors duration-300">Easy Management</h3>
               <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
-                Simple dashboard to add, edit, and organize your menu items by category.
+                Intuitive dashboard makes menu management effortless. Add items with photos, organize by categories, set prices, write descriptions, and drag to reorder. Upload a PDF menu or build individual items—you choose.
               </p>
             </CardContent>
           </Card>
 
-          <Card className="animate-in fade-in slide-in-from-bottom-8 duration-700 delay-500 group hover:shadow-xl hover:-translate-y-2 transition-all duration-300">
+          <Card className="group hover:shadow-xl hover:-translate-y-2 transition-all duration-300" data-animate="card">
             <CardContent className="p-4 sm:p-6 space-y-3 sm:space-y-4">
               <div className="bg-primary/10 w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center group-hover:scale-110 group-hover:bg-primary/20 transition-all duration-300">
                 <Zap className="w-5 h-5 sm:w-6 sm:h-6 text-primary group-hover:animate-pulse" />
               </div>
               <h3 className="text-lg sm:text-xl font-semibold group-hover:text-primary transition-colors duration-300">No App Required</h3>
               <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
-                Customers access your menu directly in their browser. No downloads or installations needed.
+                Customers simply scan the QR code with their phone's built-in camera. The menu opens instantly in their browser—no app download, no registration, no hassle. Works on iPhone, Android, and any smartphone.
               </p>
             </CardContent>
           </Card>
 
-          <Card className="animate-in fade-in slide-in-from-bottom-8 duration-700 delay-[600ms] group hover:shadow-xl hover:-translate-y-2 transition-all duration-300">
+          <Card className="group hover:shadow-xl hover:-translate-y-2 transition-all duration-300" data-animate="card">
             <CardContent className="p-4 sm:p-6 space-y-3 sm:space-y-4">
               <div className="bg-primary/10 w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center group-hover:scale-110 group-hover:bg-primary/20 transition-all duration-300">
                 <QrCode className="w-5 h-5 sm:w-6 sm:h-6 text-primary group-hover:animate-pulse" />
               </div>
               <h3 className="text-lg sm:text-xl font-semibold group-hover:text-primary transition-colors duration-300">Contactless Dining</h3>
               <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
-                Provide a safe, contactless way for customers to view your menu and make decisions.
+                Offer a hygienic, contactless dining experience. Customers view menus on their own devices, reducing physical contact with shared menus. Perfect for health-conscious diners and modern restaurants.
               </p>
             </CardContent>
           </Card>
         </div>
       </section>
 
+      {/* What is Lanimenu */}
+      <section className="bg-secondary/30 py-12 sm:py-20" data-animate="section">
+        <div className="container mx-auto px-4 max-w-4xl">
+          <div className="text-center space-y-6">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold">What is Lanimenu?</h2>
+            <div className="space-y-4 text-left sm:text-center">
+              <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
+                Lanimenu is a digital menu platform designed specifically for restaurants, cafes, bars, and food businesses across Africa. We transform traditional paper menus into modern, interactive digital experiences accessible via QR codes.
+              </p>
+              <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
+                Instead of printing expensive paper menus that become outdated quickly, create a beautiful digital menu that you can update instantly from anywhere. Your customers scan a QR code on their table, and your menu appears instantly on their phone—no app download required.
+              </p>
+              <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
+                Whether you run a fine dining restaurant, a cozy cafe, a food truck, or a hotel restaurant, Lanimenu helps you provide a modern, contactless dining experience while saving time and money on menu printing.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Food Outlets */}
-      <section className="container mx-auto px-4 py-12 sm:py-20 max-w-7xl relative z-10">
-        <div className="text-center mb-8 sm:mb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <section className="container mx-auto px-4 py-12 sm:py-20 max-w-7xl relative z-10" data-animate="section">
+        <div className="text-center mb-8 sm:mb-12">
           <h2 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">Perfect for Every Food Business</h2>
-          <p className="text-muted-foreground text-base sm:text-lg">Lanimenu works for all types of food establishments</p>
+          <p className="text-muted-foreground text-base sm:text-lg">Lanimenu works for all types of food establishments across Africa</p>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
@@ -394,8 +622,8 @@ export default function HomePage() {
       </section>
 
       {/* African Countries */}
-      <section className="container mx-auto px-4 py-12 sm:py-20 max-w-7xl">
-        <div className="text-center mb-8 sm:mb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <section className="container mx-auto px-4 py-12 sm:py-20 max-w-7xl" data-animate="section">
+        <div className="text-center mb-8 sm:mb-12">
           <h2 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">Available Across Africa</h2>
           <p className="text-muted-foreground text-base sm:text-lg">Serving restaurants in major African markets</p>
         </div>
@@ -465,8 +693,8 @@ export default function HomePage() {
       </section>
 
       {/* Q&A Section */}
-      <section className="container mx-auto px-4 py-8 sm:py-12 max-w-6xl relative z-10">
-        <div className="text-center mb-6 sm:mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <section className="container mx-auto px-4 py-8 sm:py-12 max-w-6xl relative z-10" data-animate="section">
+        <div className="text-center mb-6 sm:mb-8">
           <h2 className="text-2xl sm:text-3xl font-bold mb-2 sm:mb-3">Got Questions?</h2>
           <p className="text-muted-foreground text-sm sm:text-base">Quick answers to common questions</p>
         </div>
@@ -641,22 +869,6 @@ export default function HomePage() {
                 Transform your restaurant menu into a digital experience. 
                 Create beautiful QR code menus that delight your customers.
               </p>
-              <div className="flex gap-3 sm:gap-4">
-                <Button variant="ghost" size="sm" className="p-1.5 sm:p-2 hover:scale-110 transition-transform">
-                  <Facebook className="w-3 h-3 sm:w-4 sm:h-4" />
-                </Button>
-                <Button variant="ghost" size="sm" className="p-1.5 sm:p-2 hover:scale-110 transition-transform">
-                  <Instagram className="w-3 h-3 sm:w-4 sm:h-4" />
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="p-1.5 sm:p-2 hover:scale-110 transition-transform"
-                  onClick={() => window.open('https://wa.me/2349063525949', '_blank')}
-                >
-                  <MessageCircle className="w-3 h-3 sm:w-4 sm:h-4" />
-                </Button>
-              </div>
             </div>
 
             {/* Product */}

@@ -50,34 +50,36 @@ export function Notification({ notification, onRemove }: NotificationProps) {
   return (
     <div
       className={cn(
-        "relative flex items-start gap-3 p-4 rounded-lg border shadow-lg backdrop-blur-sm",
+        "relative flex items-start gap-2 sm:gap-3 p-3 sm:p-4 rounded-lg border shadow-lg backdrop-blur-sm",
         "transform transition-all duration-300 ease-out",
         "animate-in slide-in-from-right-full fade-in-0",
+        "w-full sm:w-auto",
         container
       )}
       style={{
         animation: "slideInRight 0.3s ease-out",
       }}
     >
-      <Icon className={cn("h-5 w-5 flex-shrink-0 mt-0.5", icon)} />
+      <Icon className={cn("h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0 mt-0.5", icon)} />
       
       <div className="flex-1 min-w-0">
-        <h4 className="text-sm font-semibold leading-5">{title}</h4>
+        <h4 className="text-xs sm:text-sm font-semibold leading-4 sm:leading-5 break-words">{title}</h4>
         {message && (
-          <p className="mt-1 text-sm opacity-90 leading-5">{message}</p>
+          <p className="mt-0.5 sm:mt-1 text-xs sm:text-sm opacity-90 leading-4 sm:leading-5 break-words">{message}</p>
         )}
       </div>
 
       <button
         onClick={() => onRemove(id)}
         className={cn(
-          "flex-shrink-0 p-1 rounded-md transition-colors",
-          "hover:bg-black/10 focus:outline-none focus:ring-2 focus:ring-offset-2",
+          "flex-shrink-0 p-1.5 sm:p-1 rounded-md transition-colors",
+          "hover:bg-black/10 active:bg-black/20 focus:outline-none focus:ring-2 focus:ring-offset-2",
+          "touch-manipulation", // Better touch handling on mobile
           icon
         )}
         aria-label="Dismiss notification"
       >
-        <X className="h-4 w-4" />
+        <X className="h-4 w-4 sm:h-4 sm:w-4" />
       </button>
     </div>
   )

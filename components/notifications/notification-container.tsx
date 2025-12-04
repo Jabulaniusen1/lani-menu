@@ -12,7 +12,7 @@ export function NotificationContainer() {
   }
 
   return (
-    <div className="fixed top-4 right-4 z-50 space-y-3 max-w-sm w-full">
+    <div className="fixed top-4 right-4 bottom-4 sm:bottom-auto z-50 space-y-2 sm:space-y-3 w-full sm:w-auto max-w-[calc(100vw-2rem)] sm:max-w-sm px-4 sm:px-0">
       {notifications.map((notification) => (
         <Notification
           key={notification.id}

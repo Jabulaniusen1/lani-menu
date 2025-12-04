@@ -45,9 +45,41 @@ export function BillingTab({ currentPlan = "free" }: BillingTabProps) {
   // Handle payment success callback
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search)
-    if (urlParams.get('payment') === 'success') {
+    const paymentSuccess = urlParams.get('payment') === 'success'
+    const reference = urlParams.get('reference') // Paystack includes reference in callback URL
+    
+    if (paymentSuccess && reference) {
+      // Verify payment with Paystack
+      const verifyPayment = async () => {
+        try {
+          const response = await fetch('/api/payments/verify', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ reference }),
+          })
+
+          const data = await response.json()
+
+          if (response.ok && data.success) {
+            // Payment verified successfully, refresh subscription
+            refreshSubscription()
+          } else {
+            console.error('Payment verification failed:', data.error)
+          }
+        } catch (error) {
+          console.error('Error verifying payment:', error)
+        } finally {
+          // Clean up URL
+          window.history.replaceState({}, document.title, window.location.pathname)
+        }
+      }
+
+      verifyPayment()
+    } else if (paymentSuccess) {
+      // If payment=success but no reference, just refresh (webhook might have handled it)
       refreshSubscription()
-      // Clean up URL
       window.history.replaceState({}, document.title, window.location.pathname)
     }
   }, [refreshSubscription])

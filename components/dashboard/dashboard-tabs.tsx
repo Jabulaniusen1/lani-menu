@@ -29,6 +29,9 @@ interface Restaurant {
   website: string | null
   currency: string
   logo_url: string | null
+  menu_layout?: string
+  menu_theme?: string
+  menu_font?: string
   created_at: string
   updated_at: string
   is_primary: boolean
@@ -169,7 +172,26 @@ export function DashboardTabs({
             </TabsContent>
 
             <TabsContent value="designs" className="mt-0">
-              <MenuDesignsTab />
+              <MenuDesignsTab 
+                restaurantId={restaurant.id}
+                currentLayout={restaurant.menu_layout || 'grid'}
+                currentTheme={restaurant.menu_theme || 'default'}
+                currentFont={restaurant.menu_font || 'inter'}
+                onLayoutUpdate={async () => {
+                  // Fetch updated restaurant data from database
+                  const { getSupabaseBrowserClient } = await import('@/lib/supabase/client')
+                  const supabase = getSupabaseBrowserClient()
+                  const { data: updatedRestaurant } = await supabase
+                    .from('restaurants')
+                    .select('*')
+                    .eq('id', restaurant.id)
+                    .single()
+                  
+                  if (updatedRestaurant) {
+                    onRestaurantUpdate(updatedRestaurant as Restaurant)
+                  }
+                }}
+              />
             </TabsContent>
           </Tabs>
         </div>

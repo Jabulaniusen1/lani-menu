@@ -46,14 +46,48 @@ export function MenuManager({ restaurant }: MenuManagerProps) {
   const [qrDialogOpen, setQrDialogOpen] = useState(false)
   const [currentCurrency, setCurrentCurrency] = useState(restaurant.currency)
   const [currentRestaurant, setCurrentRestaurant] = useState(restaurant)
-  const [displayMode, setDisplayMode] = useState<'items' | 'pdf'>(restaurant.menu_type as 'items' | 'pdf')
+  
+  // Default to 'items' if menu_type is null/undefined, otherwise use restaurant's menu_type
+  // Trust menu_type as source of truth
+  const getDefaultDisplayMode = (): 'items' | 'pdf' => {
+    if (restaurant.menu_type === 'pdf') {
+      return 'pdf'
+    }
+    if (restaurant.menu_type === 'items') {
+      return 'items'
+    }
+    // Fallback: if menu_type is null but PDF exists, default to 'pdf'
+    if (restaurant.pdf_menu_url) {
+      return 'pdf'
+    }
+    // Default to 'items'
+    return 'items'
+  }
+  
+  const [displayMode, setDisplayMode] = useState<'items' | 'pdf'>(getDefaultDisplayMode())
   const { subscription, canAddMenuItem } = useSubscription()
   const { notify } = useNotification()
 
   // Sync display mode when restaurant data changes
   useEffect(() => {
-    setDisplayMode(currentRestaurant.menu_type as 'items' | 'pdf')
-  }, [currentRestaurant.menu_type])
+    const currentType = currentRestaurant.menu_type as 'items' | 'pdf' | null | undefined
+    let newMode: 'items' | 'pdf'
+    
+    if (currentType === 'pdf' || currentType === 'items') {
+      // Trust menu_type from database
+      newMode = currentType
+    } else if (currentRestaurant.pdf_menu_url) {
+      // Fallback: if menu_type is null but PDF exists, default to 'pdf'
+      newMode = 'pdf'
+    } else {
+      // Default to 'items'
+      newMode = 'items'
+    }
+    
+    if (newMode !== displayMode) {
+      setDisplayMode(newMode)
+    }
+  }, [currentRestaurant.menu_type, currentRestaurant.pdf_menu_url, displayMode])
 
   const fetchMenuItems = async () => {
     const supabase = getSupabaseBrowserClient()
@@ -150,7 +184,11 @@ export function MenuManager({ restaurant }: MenuManagerProps) {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => window.open(menuUrl, '_blank')}
+                onClick={() => {
+                  // Add timestamp to force refresh
+                  const previewUrl = `${menuUrl}?t=${Date.now()}`
+                  window.open(previewUrl, '_blank')
+                }}
                 className="flex-1"
               >
                 <ExternalLink className="h-4 w-4 mr-2" />

@@ -35,18 +35,22 @@ WHERE NOT EXISTS (
 ALTER TABLE user_restaurants ENABLE ROW LEVEL SECURITY;
 
 -- Policy: Users can view their own restaurant associations
+DROP POLICY IF EXISTS "Users can view their own restaurant associations" ON user_restaurants;
 CREATE POLICY "Users can view their own restaurant associations" ON user_restaurants
   FOR SELECT USING (auth.uid() = user_id);
 
 -- Policy: Users can insert their own restaurant associations
+DROP POLICY IF EXISTS "Users can insert their own restaurant associations" ON user_restaurants;
 CREATE POLICY "Users can insert their own restaurant associations" ON user_restaurants
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 -- Policy: Users can update their own restaurant associations
+DROP POLICY IF EXISTS "Users can update their own restaurant associations" ON user_restaurants;
 CREATE POLICY "Users can update their own restaurant associations" ON user_restaurants
   FOR UPDATE USING (auth.uid() = user_id);
 
 -- Policy: Users can delete their own restaurant associations
+DROP POLICY IF EXISTS "Users can delete their own restaurant associations" ON user_restaurants;
 CREATE POLICY "Users can delete their own restaurant associations" ON user_restaurants
   FOR DELETE USING (auth.uid() = user_id);
 
@@ -86,6 +90,11 @@ RETURNS TABLE (
   website TEXT,
   currency TEXT,
   logo_url TEXT,
+  pdf_menu_url TEXT,
+  menu_type VARCHAR,
+  menu_layout VARCHAR,
+  menu_theme VARCHAR,
+  menu_font VARCHAR,
   created_at TIMESTAMP WITH TIME ZONE,
   updated_at TIMESTAMP WITH TIME ZONE,
   is_primary BOOLEAN
@@ -102,6 +111,11 @@ BEGIN
     r.website,
     r.currency,
     r.logo_url,
+    r.pdf_menu_url,
+    r.menu_type,
+    r.menu_layout,
+    r.menu_theme,
+    r.menu_font,
     r.created_at,
     r.updated_at,
     ur.is_primary

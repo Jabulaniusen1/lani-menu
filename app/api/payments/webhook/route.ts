@@ -72,13 +72,22 @@ async function handleChargeSuccess(data: any, supabase: any) {
     // Get payment details to create subscription
     const { data: payment } = await supabase
       .from('payments')
-      .select('user_id, metadata')
+      .select('user_id')
       .eq('paystack_reference', reference)
       .single()
 
-    if (payment && data.metadata?.plan_id) {
+    // Get plan_id from webhook metadata (Paystack includes metadata in webhook)
+    const planId = data.metadata?.plan_id
+
+    if (payment && planId) {
       const userId = payment.user_id
-      const planId = data.metadata.plan_id
+
+      // Get plan details to determine interval type
+      const { data: plan } = await supabase
+        .from('subscription_plans')
+        .select('interval_type')
+        .eq('plan_id', planId)
+        .single()
 
       // Cancel existing subscription
       await supabase
@@ -87,10 +96,17 @@ async function handleChargeSuccess(data: any, supabase: any) {
         .eq('user_id', userId)
         .eq('status', 'active')
 
-      // Create new subscription
+      // Create new subscription with correct period based on interval_type
       const currentDate = new Date()
-      const nextMonth = new Date(currentDate)
-      nextMonth.setMonth(nextMonth.getMonth() + 1)
+      const periodEnd = new Date(currentDate)
+      
+      // Calculate period end based on interval type
+      if (plan?.interval_type === 'yearly') {
+        periodEnd.setFullYear(periodEnd.getFullYear() + 1)
+      } else {
+        // Default to monthly
+        periodEnd.setMonth(periodEnd.getMonth() + 1)
+      }
 
       await supabase
         .from('user_subscriptions')
@@ -99,8 +115,9 @@ async function handleChargeSuccess(data: any, supabase: any) {
           plan_id: planId,
           status: 'active',
           paystack_customer_code: customer?.customer_code,
+          paystack_subscription_id: data.subscription?.subscription_code || null,
           current_period_start: currentDate.toISOString(),
-          current_period_end: nextMonth.toISOString()
+          current_period_end: periodEnd.toISOString()
         })
     }
   }

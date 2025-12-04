@@ -85,20 +85,28 @@ export interface PaymentData {
   reference: string
   callback_url?: string
   metadata?: Record<string, any>
+  plan?: string // Paystack plan code for subscriptions
 }
 
 export class PaystackService {
   // Initialize transaction
   static async initializeTransaction(data: PaymentData) {
     try {
-      const response = await paystack.transaction.initialize({
+      const transactionData: any = {
         email: data.email,
         amount: data.amount * 100, // Convert to kobo
         currency: data.currency,
         reference: data.reference,
         callback_url: data.callback_url,
         metadata: data.metadata
-      })
+      }
+
+      // If plan is provided, add it to create a subscription transaction
+      if (data.plan) {
+        transactionData.plan = data.plan
+      }
+
+      const response = await paystack.transaction.initialize(transactionData)
       return response
     } catch (error) {
       console.error('Error initializing transaction:', error)

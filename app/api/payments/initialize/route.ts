@@ -34,17 +34,23 @@ export async function POST(request: NextRequest) {
     const reference = `qr_menu_${uuidv4()}`
 
     // Initialize payment
-    const paymentData = {
+    const paymentData: any = {
       email,
       amount: plan.price,
       currency: plan.currency,
       reference,
-      callback_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?payment=success`,
+      callback_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?payment=success&reference=${reference}`,
       metadata: {
         user_id: user.id,
         plan_id: planId,
-        plan_name: plan.name
+        plan_name: plan.name,
+        interval_type: plan.interval_type
       }
+    }
+
+    // If plan has a Paystack plan code and it's not free, use it for subscription
+    if (plan.paystack_plan_code && planId !== 'free') {
+      paymentData.plan = plan.paystack_plan_code
     }
 
     const paymentResponse = await PaystackService.initializeTransaction(paymentData)
@@ -53,7 +59,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to initialize payment' }, { status: 400 })
     }
 
-    // Store payment record
+    // Store payment record with metadata for easy retrieval
     const { error: paymentError } = await supabase
       .from('payments')
       .insert({
@@ -62,7 +68,14 @@ export async function POST(request: NextRequest) {
         amount: plan.price,
         currency: plan.currency,
         status: 'pending',
-        gateway_response: paymentResponse
+        gateway_response: {
+          ...paymentResponse,
+          initialization_metadata: {
+            plan_id: planId,
+            plan_name: plan.name,
+            interval_type: plan.interval_type
+          }
+        }
       })
 
     if (paymentError) {

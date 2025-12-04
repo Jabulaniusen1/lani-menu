@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     // Get payment details
     const { data: payment, error: paymentError } = await supabase
       .from('payments')
-      .select('*, user_id, metadata')
+      .select('*, user_id, gateway_response')
       .eq('paystack_reference', reference)
       .single()
 
@@ -53,11 +53,32 @@ export async function POST(request: NextRequest) {
     }
 
     const userId = payment.user_id
-    const planId = paymentData.metadata?.plan_id
+    
+    // Get plan_id from various possible locations
+    let planId = paymentData.metadata?.plan_id
+    
+    // If not in Paystack verification response, get from stored initialization metadata
+    if (!planId && payment.gateway_response) {
+      planId = payment.gateway_response?.initialization_metadata?.plan_id ||
+               payment.gateway_response?.data?.metadata?.plan_id ||
+               payment.gateway_response?.metadata?.plan_id
+    }
 
     if (!planId) {
+      console.error('Plan ID not found. Payment data:', {
+        paymentDataMetadata: paymentData.metadata,
+        gatewayResponseKeys: payment.gateway_response ? Object.keys(payment.gateway_response) : null,
+        reference
+      })
       return NextResponse.json({ error: 'Plan ID not found in payment metadata' }, { status: 400 })
     }
+
+    // Get plan details to determine interval type
+    const { data: plan } = await supabase
+      .from('subscription_plans')
+      .select('interval_type')
+      .eq('plan_id', planId)
+      .single()
 
     // Cancel any existing active subscription
     await supabase
@@ -66,10 +87,17 @@ export async function POST(request: NextRequest) {
       .eq('user_id', userId)
       .eq('status', 'active')
 
-    // Create new subscription
+    // Create new subscription with correct period based on interval_type
     const currentDate = new Date()
-    const nextMonth = new Date(currentDate)
-    nextMonth.setMonth(nextMonth.getMonth() + 1)
+    const periodEnd = new Date(currentDate)
+    
+    // Calculate period end based on interval type
+    if (plan?.interval_type === 'yearly') {
+      periodEnd.setFullYear(periodEnd.getFullYear() + 1)
+    } else {
+      // Default to monthly
+      periodEnd.setMonth(periodEnd.getMonth() + 1)
+    }
 
     const { error: subscriptionError } = await supabase
       .from('user_subscriptions')
@@ -78,8 +106,9 @@ export async function POST(request: NextRequest) {
         plan_id: planId,
         status: 'active',
         paystack_customer_code: paymentData.customer?.customer_code,
+        paystack_subscription_id: paymentData.subscription?.subscription_code || null,
         current_period_start: currentDate.toISOString(),
-        current_period_end: nextMonth.toISOString()
+        current_period_end: periodEnd.toISOString()
       })
 
     if (subscriptionError) {
@@ -93,7 +122,7 @@ export async function POST(request: NextRequest) {
       subscription: {
         plan_id: planId,
         status: 'active',
-        current_period_end: nextMonth.toISOString()
+        current_period_end: periodEnd.toISOString()
       }
     })
 

@@ -30,6 +30,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
 
   const refreshSubscription = async () => {
     try {
+      setLoading(true)
       const supabase = getSupabaseBrowserClient()
       const { data: { user } } = await supabase.auth.getUser()
 
@@ -39,23 +40,80 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
         return
       }
 
-      // Get user's current subscription
+      // Get user's current subscription using RPC function
       const { data, error } = await supabase
         .rpc('get_user_subscription', { user_uuid: user.id })
 
       if (error) {
-        console.error('Error fetching subscription:', error)
-        setSubscription(null)
+        console.error('Error fetching subscription via RPC:', error)
+        
+        // Fallback: Try direct query if RPC fails
+        console.log('Attempting direct subscription query as fallback...')
+        const { data: directData, error: directError } = await supabase
+          .from('user_subscriptions')
+          .select(`
+            id,
+            plan_id,
+            status,
+            current_period_end,
+            subscription_plans (
+              name,
+              features,
+              limitations
+            )
+          `)
+          .eq('user_id', user.id)
+          .eq('status', 'active')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single()
+
+        if (directError || !directData) {
+          console.log('No active subscription found, setting to free plan')
+          setSubscription({
+            id: 'free',
+            plan_id: 'free',
+            plan_name: 'Free',
+            status: 'active',
+            current_period_end: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+            features: [
+              'Up to 5 menu items',
+              '1 restaurant location',
+              'Basic QR code generation',
+              'Standard menu design',
+              'Email support'
+            ],
+            limitations: [
+              'No custom branding',
+              'No analytics',
+              'No menu design customization'
+            ]
+          })
+        } else {
+          console.log('Subscription found via direct query:', directData)
+          const plan = directData.subscription_plans
+          setSubscription({
+            id: directData.id,
+            plan_id: directData.plan_id,
+            plan_name: plan?.name || directData.plan_id,
+            status: directData.status,
+            current_period_end: directData.current_period_end,
+            features: plan?.features || [],
+            limitations: plan?.limitations || []
+          })
+        }
       } else if (data && data.length > 0) {
+        console.log('Subscription refreshed via RPC:', data[0])
         setSubscription(data[0])
       } else {
         // No active subscription, set to free plan
+        console.log('No subscription found via RPC, setting to free plan')
         setSubscription({
           id: 'free',
           plan_id: 'free',
           plan_name: 'Free',
           status: 'active',
-          current_period_end: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(), // 1 year from now
+          current_period_end: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
           features: [
             'Up to 5 menu items',
             '1 restaurant location',
@@ -72,6 +130,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       }
     } catch (error) {
       console.error('Error refreshing subscription:', error)
+      setSubscription(null)
     } finally {
       setLoading(false)
     }
@@ -143,6 +202,32 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
 
   useEffect(() => {
     refreshSubscription()
+    
+    // Refresh subscription when page becomes visible (user returns to tab)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        refreshSubscription()
+      }
+    }
+    
+    // Refresh subscription on focus (user switches back to window)
+    const handleFocus = () => {
+      refreshSubscription()
+    }
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    window.addEventListener('focus', handleFocus)
+    
+    // Also refresh periodically (every 30 seconds) to catch webhook updates
+    const interval = setInterval(() => {
+      refreshSubscription()
+    }, 30000)
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      window.removeEventListener('focus', handleFocus)
+      clearInterval(interval)
+    }
   }, [])
 
   return (

@@ -10,6 +10,7 @@ import { AddMenuItemDialog } from "./add-menu-item-dialog"
 import { MenuItemCard } from "./menu-item-card"
 import { QRCodeDialog } from "./qr-code-dialog"
 import { MenuTypeSwitcher } from "./menu-type-switcher"
+import { UpgradeModal } from "./upgrade-modal"
 import { useSubscription } from "@/contexts/subscription-context"
 import { useNotification } from "@/hooks/use-notification"
 // import { CurrencySettings } from "./currency-settings"
@@ -37,13 +38,15 @@ interface MenuItem {
 
 interface MenuManagerProps {
   restaurant: Restaurant
+  onNavigateToBilling?: () => void
 }
 
-export function MenuManager({ restaurant }: MenuManagerProps) {
+export function MenuManager({ restaurant, onNavigateToBilling }: MenuManagerProps) {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([])
   const [loading, setLoading] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [qrDialogOpen, setQrDialogOpen] = useState(false)
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false)
   const [currentCurrency, setCurrentCurrency] = useState(restaurant.currency)
   const [currentRestaurant, setCurrentRestaurant] = useState(restaurant)
   
@@ -148,7 +151,7 @@ export function MenuManager({ restaurant }: MenuManagerProps) {
       />
 
       {/* QR Code Section */}
-      <Card>
+      <Card data-tour="qr-code-section">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <QrCode className="h-5 w-5" />
@@ -230,15 +233,13 @@ export function MenuManager({ restaurant }: MenuManagerProps) {
               )}
             </div>
             <Button 
+              data-tour="add-item-button"
               onClick={async () => {
                 const canAdd = await canAddMenuItem(currentRestaurant.id)
                 if (canAdd) {
                   setDialogOpen(true)
                 } else {
-                  notify.error(
-                    'Menu item limit reached', 
-                    'Upgrade to Pro or Business plan to add more menu items'
-                  )
+                  setUpgradeModalOpen(true)
                 }
               }}
               className="w-full sm:w-auto"
@@ -264,10 +265,7 @@ export function MenuManager({ restaurant }: MenuManagerProps) {
                     if (canAdd) {
                       setDialogOpen(true)
                     } else {
-                      notify.error(
-                        'Menu item limit reached', 
-                        'Upgrade to Pro or Business plan to add more menu items'
-                      )
+                      setUpgradeModalOpen(true)
                     }
                   }}
                 >
@@ -310,6 +308,16 @@ export function MenuManager({ restaurant }: MenuManagerProps) {
         onOpenChange={setQrDialogOpen}
         menuUrl={menuUrl}
         restaurantName={currentRestaurant.name}
+      />
+
+      <UpgradeModal
+        open={upgradeModalOpen}
+        onOpenChange={setUpgradeModalOpen}
+        onUpgrade={() => {
+          if (onNavigateToBilling) {
+            onNavigateToBilling()
+          }
+        }}
       />
     </div>
   )

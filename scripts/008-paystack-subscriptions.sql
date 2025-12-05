@@ -58,7 +58,7 @@ CREATE TABLE IF NOT EXISTS usage_tracking (
   UNIQUE(user_id, restaurant_id)
 );
 
--- Insert default subscription plans
+-- Insert default subscription plans (only if they don't exist)
 INSERT INTO subscription_plans (plan_id, name, price, currency, interval_type, features, limitations, is_popular) VALUES
 ('free', 'Free', 0, 'NGN', 'monthly', 
  '["Up to 5 menu items", "1 restaurant location", "Basic QR code generation", "Standard menu design", "Email support"]'::jsonb,
@@ -71,7 +71,8 @@ INSERT INTO subscription_plans (plan_id, name, price, currency, interval_type, f
 ('business', 'Business', 350000, 'NGN', 'yearly',
  '["Everything in Pro", "Unlimited restaurant locations", "Advanced analytics dashboard", "Team management", "API access", "White-label options", "Dedicated support"]'::jsonb,
  '[]'::jsonb,
- false);
+ false)
+ON CONFLICT (plan_id) DO NOTHING;
 
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_user_subscriptions_user_id ON user_subscriptions(user_id);
@@ -128,22 +129,49 @@ RETURNS TABLE (
   features JSONB,
   limitations JSONB
 ) AS $$
+DECLARE
+  subscription_exists BOOLEAN;
 BEGIN
-  RETURN QUERY
-  SELECT 
-    us.id,
-    us.plan_id,
-    sp.name,
-    us.status,
-    us.current_period_end,
-    sp.features,
-    sp.limitations
-  FROM user_subscriptions us
-  JOIN subscription_plans sp ON us.plan_id = sp.plan_id
-  WHERE us.user_id = user_uuid
-    AND us.status = 'active'
-  ORDER BY us.created_at DESC
-  LIMIT 1;
+  -- Check if user has an active subscription
+  SELECT EXISTS(
+    SELECT 1 
+    FROM user_subscriptions 
+    WHERE user_id = user_uuid 
+      AND status = 'active'
+  ) INTO subscription_exists;
+  
+  -- If user has an active subscription, return it
+  IF subscription_exists THEN
+    RETURN QUERY
+    SELECT 
+      us.id,
+      us.plan_id,
+      sp.name,
+      us.status,
+      us.current_period_end,
+      sp.features,
+      sp.limitations
+    FROM user_subscriptions us
+    JOIN subscription_plans sp ON us.plan_id = sp.plan_id
+    WHERE us.user_id = user_uuid
+      AND us.status = 'active'
+    ORDER BY us.created_at DESC
+    LIMIT 1;
+  ELSE
+    -- If no subscription found, return free plan as default
+    RETURN QUERY
+    SELECT 
+      NULL::UUID as subscription_id,
+      'free'::VARCHAR(50) as plan_id,
+      'Free'::VARCHAR(100) as plan_name,
+      'active'::VARCHAR(20) as status,
+      (NOW() + INTERVAL '1 year')::TIMESTAMP WITH TIME ZONE as current_period_end,
+      sp.features,
+      sp.limitations
+    FROM subscription_plans sp
+    WHERE sp.plan_id = 'free'
+    LIMIT 1;
+  END IF;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 

@@ -4,10 +4,12 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Palette, Grid3x3, List, Check, Loader2, Type } from "lucide-react"
+import { Palette, Grid3x3, List, Check, Loader2, Type, Lock, Crown } from "lucide-react"
 import { getSupabaseBrowserClient } from "@/lib/supabase/client"
 import { useNotification } from "@/hooks/use-notification"
+import { useSubscription } from "@/contexts/subscription-context"
 import { ThemePreview } from "./theme-preview"
+import { UpgradeModal } from "./upgrade-modal"
 
 interface MenuDesignsTabProps {
   restaurantId?: string
@@ -15,6 +17,7 @@ interface MenuDesignsTabProps {
   currentTheme?: string
   currentFont?: string
   onLayoutUpdate?: () => void
+  onNavigateToBilling?: () => void
 }
 
 export function MenuDesignsTab({ 
@@ -22,13 +25,18 @@ export function MenuDesignsTab({
   currentLayout = 'grid',
   currentTheme = 'default',
   currentFont = 'inter',
-  onLayoutUpdate 
+  onLayoutUpdate,
+  onNavigateToBilling
 }: MenuDesignsTabProps) {
   const { notify } = useNotification()
+  const { subscription } = useSubscription()
   const [loading, setLoading] = useState<string | null>(null)
   const [selectedLayout, setSelectedLayout] = useState(currentLayout)
   const [selectedTheme, setSelectedTheme] = useState(currentTheme)
   const [selectedFont, setSelectedFont] = useState(currentFont)
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false)
+  
+  const isPro = subscription?.plan_id === 'pro' || subscription?.plan_id === 'business'
 
   useEffect(() => {
     setSelectedLayout(currentLayout)
@@ -36,9 +44,31 @@ export function MenuDesignsTab({
     setSelectedFont(currentFont)
   }, [currentLayout, currentTheme, currentFont])
 
+  const [lockedFeatureName, setLockedFeatureName] = useState<string>('')
+  const [lockedFeatureType, setLockedFeatureType] = useState<'theme' | 'font' | 'general'>('general')
+
   const handleUpdate = async (field: 'layout' | 'theme' | 'font', value: string) => {
     if (!restaurantId) {
       notify.error("Error", "Restaurant ID is required")
+      return
+    }
+
+    // Check if theme is locked (only default is unlocked for free users)
+    if (field === 'theme' && value !== 'default' && !isPro) {
+      const theme = themes.find(t => t.id === value)
+      setLockedFeatureName(theme?.name || '')
+      setLockedFeatureType('theme')
+      setUpgradeModalOpen(true)
+      return
+    }
+
+    // Check if font is locked (only first 2 fonts are unlocked for free users)
+    const unlockedFonts = ['inter', 'roboto']
+    if (field === 'font' && !unlockedFonts.includes(value) && !isPro) {
+      const font = fonts.find(f => f.id === value)
+      setLockedFeatureName(font?.name || '')
+      setLockedFeatureType('font')
+      setUpgradeModalOpen(true)
       return
     }
 
@@ -302,11 +332,11 @@ export function MenuDesignsTab({
                           {layout.description}
         </p>
       </div>
-                    </div>
+            </div>
                     {loading === 'layout' && isSelected && (
                       <div className="flex items-center justify-center pt-2">
                         <Loader2 className="h-4 w-4 animate-spin text-orange-500" />
-                      </div>
+            </div>
                     )}
                   </CardContent>
                 </Card>
@@ -331,7 +361,21 @@ export function MenuDesignsTab({
           <div className="space-y-2">
             <Select
               value={selectedFont}
-              onValueChange={(value) => !loading && handleUpdate('font', value)}
+              onValueChange={(value) => {
+                if (!loading) {
+                  const unlockedFonts = ['inter', 'roboto']
+                  const isLocked = !isPro && !unlockedFonts.includes(value)
+                  
+                  if (isLocked) {
+                    const font = fonts.find(f => f.id === value)
+                    setLockedFeatureName(font?.name || '')
+                    setLockedFeatureType('font')
+                    setUpgradeModalOpen(true)
+                  } else {
+                    handleUpdate('font', value)
+                  }
+                }
+              }}
               disabled={loading === 'font'}
             >
               <SelectTrigger className="w-full">
@@ -349,16 +393,26 @@ export function MenuDesignsTab({
                                     font.id === 'permanentmarker' ? 'Permanent Marker' :
                                     font.id.charAt(0).toUpperCase() + font.id.slice(1)
                   
+                  const unlockedFonts = ['inter', 'roboto']
+                  const isLocked = !isPro && !unlockedFonts.includes(font.id)
+                  
                   return (
-                    <SelectItem key={font.id} value={font.id}>
-                      <div className="flex items-center gap-2">
-                        <span style={{ fontFamily: fontFamily }} className="text-sm">
+                    <SelectItem 
+                      key={font.id} 
+                      value={font.id}
+                      className={isLocked ? 'opacity-75' : ''}
+                    >
+                      <div className="flex items-center gap-2 w-full">
+                        <span style={{ fontFamily: fontFamily }} className="text-sm flex-1">
                           {font.name}
                         </span>
+                        {isLocked && (
+                          <Lock className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                        )}
                         {loading === 'font' && selectedFont === font.id && (
                           <Loader2 className="h-3 w-3 animate-spin text-orange-500 ml-auto" />
                         )}
-            </div>
+                      </div>
                     </SelectItem>
                   )
                 })}
@@ -383,17 +437,39 @@ export function MenuDesignsTab({
           <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {themes.map((theme) => {
               const isSelected = selectedTheme === theme.id
+              const isLocked = !isPro && theme.id !== 'default'
               
               return (
                 <Card
                   key={theme.id}
-                  className={`cursor-pointer transition-all duration-300 active:scale-[0.98] sm:hover:shadow-xl sm:hover:scale-105 border-2 touch-manipulation ${
+                  className={`transition-all duration-300 active:scale-[0.98] border-2 touch-manipulation relative ${
+                    isLocked 
+                      ? 'cursor-pointer opacity-90' 
+                      : 'cursor-pointer sm:hover:shadow-xl sm:hover:scale-105'
+                  } ${
                     isSelected 
                       ? 'ring-2 ring-orange-500 border-orange-500 shadow-lg sm:scale-105' 
                       : 'border-gray-200 sm:hover:border-gray-300'
                   }`}
-                  onClick={() => !loading && handleUpdate('theme', theme.id)}
+                  onClick={() => {
+                    if (!loading) {
+                      if (isLocked) {
+                        setLockedFeatureName(theme.name)
+                        setLockedFeatureType('theme')
+                        setUpgradeModalOpen(true)
+                      } else {
+                        handleUpdate('theme', theme.id)
+                      }
+                    }
+                  }}
                 >
+                  {isLocked && (
+                    <div className="absolute top-2 right-2 z-10">
+                      <div className="bg-background/90 backdrop-blur-sm rounded-full p-1.5 border border-gray-200">
+                        <Lock className="h-3.5 w-3.5 text-muted-foreground" />
+                      </div>
+                    </div>
+                  )}
                   <CardContent className="p-4">
                     <div className="space-y-3">
                       <div className="flex items-center justify-between gap-2">
@@ -421,10 +497,22 @@ export function MenuDesignsTab({
                 </Card>
               )
             })}
-                </div>
-              </CardContent>
-            </Card>
+          </div>
+        </CardContent>
+      </Card>
 
+      {/* Upgrade Modal */}
+      <UpgradeModal
+        open={upgradeModalOpen}
+        onOpenChange={setUpgradeModalOpen}
+        onUpgrade={() => {
+          if (onNavigateToBilling) {
+            onNavigateToBilling()
+          }
+        }}
+        featureType={lockedFeatureType}
+        featureName={lockedFeatureName}
+      />
     </div>
   )
 }

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Tabs, TabsContent } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { ProfileTab } from "./profile-tab"
@@ -10,6 +10,8 @@ import { RestaurantsOverview } from "./restaurants-overview"
 import { MenuManager } from "./menu-manager"
 import { DashboardSidebar } from "./dashboard-sidebar"
 import { MobilePreviewPanel } from "./mobile-preview-panel"
+import { OnboardingTour } from "./onboarding-tour"
+import { TourButton } from "./tour-button"
 import { 
   Menu, 
   X, 
@@ -59,6 +61,42 @@ export function DashboardTabs({
 }: DashboardTabsProps) {
   const [activeTab, setActiveTab] = useState("menu")
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [tourRunning, setTourRunning] = useState(false)
+
+  // Check if user is new and should see tour
+  useEffect(() => {
+    const tourCompleted = localStorage.getItem('lanimenu_tour_completed')
+    const isNewUser = !tourCompleted
+    
+    // Check if restaurant was just created (within last 5 minutes)
+    if (restaurant?.created_at) {
+      const createdTime = new Date(restaurant.created_at).getTime()
+      const now = Date.now()
+      const fiveMinutesAgo = now - (5 * 60 * 1000)
+      const isRecentlyCreated = createdTime > fiveMinutesAgo
+      
+      if (isNewUser && isRecentlyCreated) {
+        // Auto-start tour for new users after a short delay
+        setTimeout(() => {
+          setTourRunning(true)
+        }, 1000)
+      }
+    }
+  }, [restaurant?.created_at])
+
+  const handleTourComplete = () => {
+    setTourRunning(false)
+    localStorage.setItem('lanimenu_tour_completed', 'true')
+  }
+
+  const handleTourSkip = () => {
+    setTourRunning(false)
+    localStorage.setItem('lanimenu_tour_completed', 'true')
+  }
+
+  const startTour = () => {
+    setTourRunning(true)
+  }
 
   const tabs = [
     { id: "menu", label: "Menu", icon: Utensils },
@@ -79,6 +117,7 @@ export function DashboardTabs({
         onRestaurantChange={onRestaurantChange}
         onRestaurantsUpdate={onRestaurantsUpdate}
         onAddRestaurant={onAddRestaurant}
+        onStartTour={startTour}
       />
 
       {/* Mobile Menu Overlay */}
@@ -153,7 +192,10 @@ export function DashboardTabs({
         <div className="p-4 lg:p-6">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsContent value="menu" className="mt-0">
-              <MenuManager restaurant={restaurant} />
+              <MenuManager 
+                restaurant={restaurant} 
+                onNavigateToBilling={() => setActiveTab("billing")}
+              />
             </TabsContent>
 
             <TabsContent value="restaurants" className="mt-0">
@@ -196,11 +238,21 @@ export function DashboardTabs({
                     onRestaurantUpdate(updatedRestaurant as Restaurant)
                   }
                 }}
+                onNavigateToBilling={() => setActiveTab("billing")}
               />
             </TabsContent>
           </Tabs>
         </div>
       </div>
+
+      {/* Onboarding Tour */}
+      <OnboardingTour
+        run={tourRunning}
+        onComplete={handleTourComplete}
+        onSkip={handleTourSkip}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+      />
     </div>
   )
 }

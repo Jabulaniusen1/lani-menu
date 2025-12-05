@@ -27,6 +27,7 @@ import {
   Plus,
   QrCode
 } from "lucide-react"
+import { TourButton } from "./tour-button"
 
 interface Restaurant {
   id: string
@@ -61,7 +62,8 @@ export function DashboardSidebar({
   onTabChange,
   onRestaurantChange,
   onRestaurantsUpdate,
-  onAddRestaurant
+  onAddRestaurant,
+  onStartTour
 }: DashboardSidebarProps) {
   const router = useRouter()
   const { subscription } = useSubscription()
@@ -82,7 +84,7 @@ export function DashboardSidebar({
   ]
 
   return (
-    <div className="w-64 bg-white border-r border-gray-200 flex flex-col h-screen fixed left-0 top-0 z-40 hidden lg:flex">
+    <div className="w-64 bg-white border-r border-gray-200 flex flex-col h-screen fixed left-0 top-0 z-40 hidden lg:flex" data-tour="sidebar-menu">
       {/* Header Section */}
       <div className="p-4 lg:p-6 border-b border-gray-200">
         <div className="flex items-center gap-2 lg:gap-3 mb-4">
@@ -199,9 +201,14 @@ export function DashboardSidebar({
         <nav className="space-y-1">
           {tabs.map((tab) => {
             const Icon = tab.icon
+            const dataTourId = tab.id === 'menu' ? 'menu-tab' : 
+                              tab.id === 'restaurants' ? 'restaurants-tab' :
+                              tab.id === 'billing' ? 'billing-tab' :
+                              tab.id === 'designs' ? 'designs-tab' : null
             return (
               <button
                 key={tab.id}
+                data-tour={dataTourId}
                 onClick={() => onTabChange(tab.id)}
                 className={`w-full flex items-center gap-2 lg:gap-3 px-2 lg:px-3 py-2 lg:py-2.5 rounded-lg text-left transition-colors ${
                   activeTab === tab.id
@@ -217,8 +224,14 @@ export function DashboardSidebar({
         </nav>
       </div>
 
-      {/* Footer with Logout */}
-      <div className="p-3 lg:p-4 border-t border-gray-200">
+      {/* Footer with Tour and Logout */}
+      <div className="p-3 lg:p-4 border-t border-gray-200 space-y-2">
+        {onStartTour && (
+          <TourButton 
+            onClick={onStartTour}
+            className="w-full"
+          />
+        )}
         <Button
           variant="ghost"
           onClick={handleLogout}

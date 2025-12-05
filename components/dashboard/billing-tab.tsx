@@ -6,6 +6,7 @@ import { CreditCard, Crown, Check, Star, Zap, Users, QrCode, Palette, Loader2 } 
 import { PaymentButton } from "@/components/payments/payment-button"
 import { CountrySelector } from "@/components/payments/country-selector"
 import { BillingPeriodToggle } from "@/components/payments/billing-period-toggle"
+import { WelcomeModal } from "@/components/dashboard/welcome-modal"
 import { useSubscription } from "@/contexts/subscription-context"
 import { useEffect, useState } from "react"
 import { SupportedCountry, BillingPeriod } from "@/lib/country-pricing"
@@ -20,6 +21,9 @@ export function BillingTab({ currentPlan = "free" }: BillingTabProps) {
   const [plans, setPlans] = useState<any[]>([])
   const [selectedCountry, setSelectedCountry] = useState<SupportedCountry | null>(null)
   const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>('monthly')
+  const [welcomeModalOpen, setWelcomeModalOpen] = useState(false)
+  const [newSubscriptionPlan, setNewSubscriptionPlan] = useState<{ planId: string; planName: string; features: string[] } | null>(null)
+  const [previousPlanId, setPreviousPlanId] = useState<string | null>(null)
 
   useEffect(() => {
     // Fetch plans from database
@@ -52,6 +56,31 @@ export function BillingTab({ currentPlan = "free" }: BillingTabProps) {
     setSelectedCountry(countryFromCookie)
   }, [])
 
+  // Check for subscription upgrade when subscription changes
+  useEffect(() => {
+    if (subscription && previousPlanId && subscription.plan_id !== previousPlanId) {
+      const newPlanId = subscription.plan_id
+      
+      // Only show welcome modal if upgrading to a paid plan
+      if (newPlanId && newPlanId !== 'free' && previousPlanId === 'free') {
+        // Find plan in plans array
+        const plan = plans.find(p => p.plan_id === newPlanId)
+        
+        if (plan) {
+          setNewSubscriptionPlan({
+            planId: plan.plan_id,
+            planName: plan.name,
+            features: plan.features || []
+          })
+          setWelcomeModalOpen(true)
+        }
+      }
+      
+      // Reset previous plan ID
+      setPreviousPlanId(null)
+    }
+  }, [subscription, previousPlanId, plans])
+
   // Handle payment success callback
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search)
@@ -73,8 +102,40 @@ export function BillingTab({ currentPlan = "free" }: BillingTabProps) {
           const data = await response.json()
 
           if (response.ok && data.success) {
-            // Payment verified successfully, refresh subscription
-            refreshSubscription()
+            // Payment verified successfully, get plan details and show welcome modal
+            const planId = data.subscription?.plan_id
+            
+            if (planId && planId !== 'free') {
+              // Fetch plan details to get features
+              const { getSupabaseBrowserClient } = await import('@/lib/supabase/client')
+              const supabase = getSupabaseBrowserClient()
+              
+              const { data: planData } = await supabase
+                .from('subscription_plans')
+                .select('plan_id, name, features')
+                .eq('plan_id', planId)
+                .single()
+              
+              if (planData) {
+                setNewSubscriptionPlan({
+                  planId: planData.plan_id,
+                  planName: planData.name,
+                  features: planData.features || []
+                })
+                setWelcomeModalOpen(true)
+              }
+            }
+            
+            // Refresh subscription with retry mechanism
+            // Wait a bit for database to update, then refresh
+            setTimeout(() => {
+              refreshSubscription()
+            }, 500)
+            
+            // Also refresh again after a longer delay to catch any webhook updates
+            setTimeout(() => {
+              refreshSubscription()
+            }, 2000)
           } else {
             console.error('Payment verification failed:', data.error)
           }
@@ -89,10 +150,57 @@ export function BillingTab({ currentPlan = "free" }: BillingTabProps) {
       verifyPayment()
     } else if (paymentSuccess) {
       // If payment=success but no reference, just refresh (webhook might have handled it)
+      // Store current plan before refresh
+      const currentPlanBeforeRefresh = subscription?.plan_id || 'free'
+      setPreviousPlanId(currentPlanBeforeRefresh)
+      
+      // Refresh immediately and with retries
       refreshSubscription()
+      
+      setTimeout(() => {
+        refreshSubscription()
+      }, 1000)
+      
+      setTimeout(() => {
+        refreshSubscription()
+      }, 3000)
+      
+      // Check for subscription change after a delay
+      setTimeout(async () => {
+        const { getSupabaseBrowserClient } = await import('@/lib/supabase/client')
+        const supabase = getSupabaseBrowserClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        
+        if (user) {
+          const { data: subscriptionData } = await supabase
+            .rpc('get_user_subscription', { user_uuid: user.id })
+          
+          if (subscriptionData && subscriptionData.length > 0) {
+            const newPlanId = subscriptionData[0].plan_id
+            if (newPlanId && newPlanId !== 'free' && newPlanId !== currentPlanBeforeRefresh) {
+              // Fetch plan details
+              const { data: planData } = await supabase
+                .from('subscription_plans')
+                .select('plan_id, name, features')
+                .eq('plan_id', newPlanId)
+                .single()
+              
+              if (planData) {
+                setNewSubscriptionPlan({
+                  planId: planData.plan_id,
+                  planName: planData.name,
+                  features: planData.features || []
+                })
+                setWelcomeModalOpen(true)
+              }
+            }
+          }
+        }
+      }, 2000)
+      
       window.history.replaceState({}, document.title, window.location.pathname)
     }
-  }, [refreshSubscription])
+  }, [refreshSubscription, subscription])
 
   if (loading) {
     return (
@@ -250,6 +358,17 @@ export function BillingTab({ currentPlan = "free" }: BillingTabProps) {
           </div>
         </CardContent>
       </Card>
+
+      {/* Welcome Modal */}
+      {newSubscriptionPlan && (
+        <WelcomeModal
+          open={welcomeModalOpen}
+          onOpenChange={setWelcomeModalOpen}
+          planName={newSubscriptionPlan.planName}
+          planId={newSubscriptionPlan.planId}
+          features={newSubscriptionPlan.features}
+        />
+      )}
     </div>
   )
 }

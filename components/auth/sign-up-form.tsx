@@ -36,14 +36,23 @@ export function SignUpForm() {
       return
     }
 
+    // Validate restaurant name
+    if (!restaurantName.trim()) {
+      setError("Restaurant name is required")
+      notify.error("Restaurant name required", "Please enter your restaurant name")
+      setLoading(false)
+      return
+    }
+
     try {
       const supabase = getSupabaseBrowserClient()
 
+      // Sign up the user (email confirmation is disabled)
       const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${window.location.origin}/dashboard`,
+          emailRedirectTo: `${window.location.origin}/dashboard`,
           data: {
             restaurant_name: restaurantName,
           },
@@ -52,10 +61,52 @@ export function SignUpForm() {
 
       if (signUpError) throw signUpError
 
-      if (data.user) {
-        notify.success("Account created successfully!", "Please check your email to confirm your account")
-        router.push("/confirm-email")
+      if (!data.user) {
+        throw new Error("Failed to create user account")
       }
+
+      // Create restaurant immediately after signup
+      // Generate unique slug
+      const baseSlug = restaurantName
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+      const timestamp = Date.now().toString(36)
+      const slug = `${baseSlug}-${timestamp}`
+      
+      const { data: restaurant, error: restaurantError } = await supabase
+        .from("restaurants")
+        .insert({
+          name: restaurantName,
+          user_id: data.user.id,
+          slug: slug,
+          currency: "NGN", // Default currency, user can change later
+        })
+        .select()
+        .single()
+
+      if (restaurantError) {
+        console.error("Restaurant creation error:", restaurantError)
+        // If restaurant creation fails, still redirect to dashboard
+        // The dashboard will handle redirecting to add-restaurant if needed
+      } else {
+        // Create user_restaurants relationship
+        const { error: userRestaurantError } = await supabase
+          .from("user_restaurants")
+          .insert({
+            user_id: data.user.id,
+            restaurant_id: restaurant.id,
+            is_primary: true,
+          })
+
+        if (userRestaurantError) {
+          console.error("User restaurant relationship error:", userRestaurantError)
+        }
+      }
+
+      notify.success("Account created successfully!", "Welcome to Lanimenu!")
+      router.push("/dashboard")
+      router.refresh()
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : "An error occurred during sign up"
       setError(errorMessage)

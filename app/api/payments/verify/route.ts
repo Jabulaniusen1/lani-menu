@@ -99,7 +99,15 @@ export async function POST(request: NextRequest) {
       periodEnd.setMonth(periodEnd.getMonth() + 1)
     }
 
-    const { error: subscriptionError } = await supabase
+    console.log('Creating subscription:', {
+      user_id: userId,
+      plan_id: planId,
+      status: 'active',
+      current_period_start: currentDate.toISOString(),
+      current_period_end: periodEnd.toISOString()
+    })
+
+    const { data: newSubscription, error: subscriptionError } = await supabase
       .from('user_subscriptions')
       .insert({
         user_id: userId,
@@ -110,10 +118,30 @@ export async function POST(request: NextRequest) {
         current_period_start: currentDate.toISOString(),
         current_period_end: periodEnd.toISOString()
       })
+      .select()
+      .single()
 
     if (subscriptionError) {
       console.error('Error creating subscription:', subscriptionError)
-      return NextResponse.json({ error: 'Failed to create subscription' }, { status: 500 })
+      return NextResponse.json({ error: 'Failed to create subscription', details: subscriptionError.message }, { status: 500 })
+    }
+
+    console.log('Subscription created successfully:', newSubscription)
+
+    // Verify the subscription was created and can be retrieved
+    const { data: verifySubscription, error: verifyError } = await supabase
+      .from('user_subscriptions')
+      .select('*, subscription_plans(name)')
+      .eq('user_id', userId)
+      .eq('status', 'active')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single()
+
+    if (verifyError) {
+      console.error('Error verifying subscription creation:', verifyError)
+    } else {
+      console.log('Verified subscription exists:', verifySubscription)
     }
 
     return NextResponse.json({
@@ -123,7 +151,8 @@ export async function POST(request: NextRequest) {
         plan_id: planId,
         status: 'active',
         current_period_end: periodEnd.toISOString()
-      }
+      },
+      subscription_id: newSubscription?.id
     })
 
   } catch (error) {

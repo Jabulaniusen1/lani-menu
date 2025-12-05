@@ -2,7 +2,7 @@
 
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Star, Clock, DollarSign, Flame, UtensilsCrossed, ChefHat, Calendar } from "lucide-react"
+import { Star, Clock, DollarSign, Flame, ChefHat, Calendar } from "lucide-react"
 import { formatPrice } from "@/lib/currency"
 
 interface MenuItem {
@@ -37,75 +37,77 @@ interface MenuLayoutProps {
 // Grid Layout (Default) - Responsive: 1 column mobile, 2 columns tablet+
 export function GridLayout({ items, currency, onItemClick, themeConfig }: MenuLayoutProps) {
   return (
-    <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2">
+    <div className="grid gap-5 sm:gap-6 grid-cols-1 sm:grid-cols-2">
       {items.map((item) => (
         <Card 
           key={item.id} 
-          className={`group hover:shadow-2xl sm:hover:scale-[1.02] transition-all duration-500 cursor-pointer overflow-hidden ${themeConfig?.card || 'bg-white'} ${themeConfig?.cardHover || ''} ${themeConfig?.border || 'border-gray-200'} rounded-xl border-2 shadow-md hover:shadow-2xl`}
+          className={`group transition-all duration-300 cursor-pointer overflow-hidden ${themeConfig?.card || 'bg-white'} ${themeConfig?.cardHover || ''} ${themeConfig?.border || 'border-gray-200'} rounded-2xl border`}
           onClick={() => onItemClick(item)}
         >
-          <div className="relative">
-            {item.image_url ? (
-              <div className="aspect-[4/3] overflow-hidden relative">
-                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent z-10"></div>
-                <img
-                  src={item.image_url}
-                  alt={item.name}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
-                />
+          {item.image_url && (
+            <div className="relative aspect-[4/3] overflow-hidden">
+              <img
+                src={item.image_url}
+                alt={item.name}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+              />
+              {/* Subtle overlay gradient */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              
+              {/* Badges - top left */}
+              <div className="absolute top-3 left-3 flex flex-wrap gap-2 z-10">
+                {item.is_popular && (
+                  <Badge className="bg-white/95 backdrop-blur-sm text-orange-600 border-0 px-2.5 py-1 text-xs font-semibold">
+                    <Star className="w-3 h-3 mr-1 fill-orange-600" />
+                    Popular
+                  </Badge>
+                )}
+                {item.is_spicy && (
+                  <Badge className="bg-white/95 backdrop-blur-sm text-red-600 border-0 px-2.5 py-1 text-xs font-semibold">
+                    <Flame className="w-3 h-3 mr-1 fill-red-600" />
+                    Spicy
+                  </Badge>
+                )}
               </div>
-            ) : (
-              <div className="aspect-[4/3] bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                <UtensilsCrossed className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400" />
+            </div>
+          )}
+
+          <CardContent className="p-5 sm:p-6">
+            <div className="space-y-3">
+              {/* Title and Price Row */}
+              <div className="flex items-start justify-between gap-3">
+                <h3 className={`text-lg sm:text-xl font-bold leading-tight flex-1 ${themeConfig?.text || 'text-gray-900'} tracking-tight`}>
+                  {item.name}
+                </h3>
+                <div className={`${themeConfig?.accent || 'text-orange-500'} font-bold text-lg sm:text-xl flex-shrink-0`}>
+                  {formatPrice(item.price, currency)}
+                </div>
               </div>
-            )}
-            
-            <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-20">
-              {item.is_popular && (
-                <Badge className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-xs sm:text-sm shadow-lg border-0 font-semibold">
-                  <Star className="w-2.5 h-2.5 sm:w-3 sm:h-3 mr-1 fill-white" />
-                  <span className="hidden sm:inline">Popular</span>
-                </Badge>
-              )}
-              {item.is_spicy && (
-                <Badge className="bg-gradient-to-r from-red-500 to-red-600 text-white text-xs sm:text-sm shadow-lg border-0 font-semibold">
-                  <Flame className="w-2.5 h-2.5 sm:w-3 sm:h-3 mr-1 fill-white" />
-                  <span className="hidden sm:inline">Spicy</span>
-                </Badge>
-              )}
-            </div>
 
-            <div className="absolute top-3 right-3 z-20">
-              <Badge className={`${themeConfig?.badge || 'bg-primary'} ${themeConfig?.badgeText || 'text-primary-foreground'} text-sm sm:text-lg px-3 sm:px-4 py-1 sm:py-1.5 shadow-xl font-bold rounded-lg`}>
-                {formatPrice(item.price, currency)}
-              </Badge>
-            </div>
-          </div>
-
-          <CardContent className="p-4 sm:p-5">
-            <div className="space-y-2 sm:space-y-2.5">
-              <h3 className={`text-base sm:text-lg lg:text-xl font-bold leading-tight transition-colors ${themeConfig?.text || 'text-gray-900'} tracking-tight`}>
-                {item.name}
-              </h3>
+              {/* Description */}
               {item.description && (
-                <p className={`text-xs sm:text-sm ${themeConfig?.text || 'text-muted-foreground'} opacity-75 line-clamp-2 leading-relaxed`}>
+                <p className={`text-sm ${themeConfig?.text || 'text-gray-600'} opacity-80 line-clamp-2 leading-relaxed`}>
                   {item.description}
                 </p>
               )}
-              <div className={`flex items-center gap-3 sm:gap-4 text-xs ${themeConfig?.text || 'text-muted-foreground'} opacity-70`}>
-                {item.preparation_time && (
-                  <div className="flex items-center gap-1">
-                    <Clock className={`w-3 h-3 ${themeConfig?.text || 'text-muted-foreground'} opacity-50`} />
-                    <span>{item.preparation_time}min</span>
-                  </div>
-                )}
-                {item.calories && (
-                  <div className="flex items-center gap-1">
-                    <DollarSign className="w-3 h-3" />
-                    <span>{item.calories} cal</span>
-                  </div>
-                )}
-              </div>
+
+              {/* Metadata Row */}
+              {(item.preparation_time || item.calories) && (
+                <div className={`flex items-center gap-4 pt-2 border-t ${themeConfig?.border || 'border-gray-200'}`}>
+                  {item.preparation_time && (
+                    <div className={`flex items-center gap-1.5 text-xs ${themeConfig?.text || 'text-gray-500'} opacity-70`}>
+                      <Clock className={`w-3.5 h-3.5 ${themeConfig?.text || 'text-gray-400'}`} />
+                      <span>{item.preparation_time} min</span>
+                    </div>
+                  )}
+                  {item.calories && (
+                    <div className={`flex items-center gap-1.5 text-xs ${themeConfig?.text || 'text-gray-500'} opacity-70`}>
+                      <DollarSign className={`w-3.5 h-3.5 ${themeConfig?.text || 'text-gray-400'}`} />
+                      <span>{item.calories} cal</span>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -121,38 +123,34 @@ export function ListLayout({ items, currency, onItemClick, themeConfig }: MenuLa
       {items.map((item) => (
         <Card 
           key={item.id} 
-          className={`group hover:shadow-xl transition-all duration-500 cursor-pointer overflow-hidden rounded-xl ${themeConfig?.card || 'bg-white'} ${themeConfig?.cardHover || ''} ${themeConfig?.border || 'border-gray-200'} border-2 shadow-md`}
+          className={`group transition-all duration-500 cursor-pointer overflow-hidden rounded-xl ${themeConfig?.card || 'bg-white'} ${themeConfig?.cardHover || ''} ${themeConfig?.border || 'border-gray-200'} border-2`}
           onClick={() => onItemClick(item)}
         >
           {/* Always horizontal layout - image left, content right */}
           <div className="flex">
             {/* Square Image on Left - fixed size on all screens */}
-            <div className="relative w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 flex-shrink-0 rounded-l-lg overflow-hidden">
-              {item.image_url ? (
+            {item.image_url && (
+              <div className="relative w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 flex-shrink-0 ml-5 overflow-hidden">
                 <img
                   src={item.image_url}
                   alt={item.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                  className="w-full h-full object-cover rounded-[5px] group-hover:scale-105 transition-transform duration-700 ease-out"
                 />
-              ) : (
-                <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                  <UtensilsCrossed className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400" />
+                {/* Popular/Spicy Badges - top left */}
+                <div className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2 flex flex-col gap-1 z-10">
+                  {item.is_popular && (
+                    <Badge className="bg-orange-500 text-white text-[10px] sm:text-xs border-0 px-1 py-0">
+                      <Star className="w-2 h-2" />
+                    </Badge>
+                  )}
+                  {item.is_spicy && (
+                    <Badge className="bg-red-500 text-white text-[10px] sm:text-xs border-0 px-1 py-0">
+                      <Flame className="w-2 h-2" />
+                    </Badge>
+                  )}
                 </div>
-              )}
-              {/* Popular/Spicy Badges - top left */}
-              <div className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2 flex flex-col gap-1">
-                {item.is_popular && (
-                  <Badge className="bg-orange-500 text-white text-[10px] sm:text-xs border-0 px-1 py-0">
-                    <Star className="w-2 h-2" />
-                  </Badge>
-                )}
-                {item.is_spicy && (
-                  <Badge className="bg-red-500 text-white text-[10px] sm:text-xs border-0 px-1 py-0">
-                    <Flame className="w-2 h-2" />
-                  </Badge>
-                )}
               </div>
-            </div>
+            )}
             
             {/* Content on Right - matching event card style exactly */}
             <CardContent className="flex-1 p-3 sm:p-4 md:p-5 flex flex-col justify-center min-w-0">
@@ -204,11 +202,11 @@ export function CompactLayout({ items, currency, onItemClick, themeConfig }: Men
       {items.map((item) => (
         <Card 
           key={item.id} 
-          className={`group hover:shadow-xl sm:hover:scale-[1.02] transition-all duration-500 cursor-pointer overflow-hidden rounded-xl ${themeConfig?.card || 'bg-white'} ${themeConfig?.cardHover || ''} ${themeConfig?.border || 'border-gray-200'} border-2 shadow-md`}
+          className={`group sm:hover:scale-[1.02] transition-all duration-500 cursor-pointer overflow-hidden rounded-xl ${themeConfig?.card || 'bg-white'} ${themeConfig?.cardHover || ''} ${themeConfig?.border || 'border-gray-200'} border-2`}
           onClick={() => onItemClick(item)}
         >
-          <div className="relative">
-            {item.image_url ? (
+          {item.image_url && (
+            <div className="relative">
               <div className="aspect-square overflow-hidden relative">
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent z-10"></div>
                 <img
@@ -217,31 +215,27 @@ export function CompactLayout({ items, currency, onItemClick, themeConfig }: Men
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
                 />
               </div>
-            ) : (
-              <div className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                <UtensilsCrossed className="w-10 h-10 sm:w-12 sm:h-12 text-gray-400" />
+              
+              <div className="absolute top-2 left-2 flex flex-col gap-1 z-20">
+                {item.is_popular && (
+                  <Badge className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-xs border-0">
+                    <Star className="w-2 h-2 fill-white" />
+                  </Badge>
+                )}
+                {item.is_spicy && (
+                  <Badge className="bg-gradient-to-r from-red-500 to-red-600 text-white text-xs border-0">
+                    <Flame className="w-2 h-2 fill-white" />
+                  </Badge>
+                )}
               </div>
-            )}
-            
-            <div className="absolute top-2 left-2 flex flex-col gap-1 z-20">
-              {item.is_popular && (
-                <Badge className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-xs shadow-md border-0">
-                  <Star className="w-2 h-2 fill-white" />
-                </Badge>
-              )}
-              {item.is_spicy && (
-                <Badge className="bg-gradient-to-r from-red-500 to-red-600 text-white text-xs shadow-md border-0">
-                  <Flame className="w-2 h-2 fill-white" />
-                </Badge>
-              )}
-            </div>
 
-            <div className="absolute top-2 right-2 z-20">
-              <Badge className={`${themeConfig?.badge || 'bg-primary'} ${themeConfig?.badgeText || 'text-primary-foreground'} text-xs sm:text-sm px-2 sm:px-2.5 py-0.5 shadow-lg font-bold rounded-lg`}>
-                {formatPrice(item.price, currency)}
-              </Badge>
+              <div className="absolute top-2 right-2 z-20">
+                <Badge className={`${themeConfig?.badge || 'bg-primary'} ${themeConfig?.badgeText || 'text-primary-foreground'} text-xs sm:text-sm px-2 sm:px-2.5 py-0.5 font-bold rounded-lg`}>
+                  {formatPrice(item.price, currency)}
+                </Badge>
+              </div>
             </div>
-          </div>
+          )}
 
           <CardContent className="p-3 sm:p-3.5">
             <h3 className={`font-bold text-xs sm:text-sm leading-tight transition-colors mb-1 ${themeConfig?.text || 'text-gray-900'} tracking-tight`}>
@@ -266,11 +260,11 @@ export function MasonryLayout({ items, currency, onItemClick, themeConfig }: Men
       {items.map((item) => (
         <Card 
           key={item.id} 
-          className={`group hover:shadow-2xl sm:hover:scale-[1.02] transition-all duration-500 cursor-pointer overflow-hidden break-inside-avoid mb-3 sm:mb-4 rounded-xl ${themeConfig?.card || 'bg-white'} ${themeConfig?.cardHover || ''} ${themeConfig?.border || 'border-gray-200'} border-2 shadow-md`}
+          className={`group sm:hover:scale-[1.02] transition-all duration-500 cursor-pointer overflow-hidden break-inside-avoid mb-3 sm:mb-4 rounded-xl ${themeConfig?.card || 'bg-white'} ${themeConfig?.cardHover || ''} ${themeConfig?.border || 'border-gray-200'} border-2`}
           onClick={() => onItemClick(item)}
         >
-          <div className="relative">
-            {item.image_url ? (
+          {item.image_url && (
+            <div className="relative">
               <div className="relative">
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent z-10 rounded-t-xl"></div>
                 <img
@@ -279,33 +273,29 @@ export function MasonryLayout({ items, currency, onItemClick, themeConfig }: Men
                   className="w-full h-auto object-cover group-hover:scale-110 transition-transform duration-700 ease-out rounded-t-xl"
                 />
               </div>
-            ) : (
-              <div className="aspect-[3/4] bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center rounded-t-xl">
-                <UtensilsCrossed className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400" />
+              
+              <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-20">
+                {item.is_popular && (
+                  <Badge className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-xs sm:text-sm border-0 font-semibold">
+                    <Star className="w-2.5 h-2.5 sm:w-3 sm:h-3 mr-1 fill-white" />
+                    <span className="hidden sm:inline">Popular</span>
+                  </Badge>
+                )}
+                {item.is_spicy && (
+                  <Badge className="bg-gradient-to-r from-red-500 to-red-600 text-white text-xs sm:text-sm border-0 font-semibold">
+                    <Flame className="w-2.5 h-2.5 sm:w-3 sm:h-3 mr-1 fill-white" />
+                    <span className="hidden sm:inline">Spicy</span>
+                  </Badge>
+                )}
               </div>
-            )}
-            
-            <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-20">
-              {item.is_popular && (
-                <Badge className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-xs sm:text-sm shadow-lg border-0 font-semibold">
-                  <Star className="w-2.5 h-2.5 sm:w-3 sm:h-3 mr-1 fill-white" />
-                  <span className="hidden sm:inline">Popular</span>
-                </Badge>
-              )}
-              {item.is_spicy && (
-                <Badge className="bg-gradient-to-r from-red-500 to-red-600 text-white text-xs sm:text-sm shadow-lg border-0 font-semibold">
-                  <Flame className="w-2.5 h-2.5 sm:w-3 sm:h-3 mr-1 fill-white" />
-                  <span className="hidden sm:inline">Spicy</span>
-                </Badge>
-              )}
-            </div>
 
-            <div className="absolute top-3 right-3 z-20">
-              <Badge className={`${themeConfig?.badge || 'bg-primary'} ${themeConfig?.badgeText || 'text-primary-foreground'} text-xs sm:text-base px-2.5 sm:px-3 py-1 sm:py-1.5 shadow-xl font-bold rounded-lg`}>
-                {formatPrice(item.price, currency)}
-              </Badge>
+              <div className="absolute top-3 right-3 z-20">
+                <Badge className={`${themeConfig?.badge || 'bg-primary'} ${themeConfig?.badgeText || 'text-primary-foreground'} text-xs sm:text-base px-2.5 sm:px-3 py-1 sm:py-1.5 font-bold rounded-lg`}>
+                  {formatPrice(item.price, currency)}
+                </Badge>
+              </div>
             </div>
-          </div>
+          )}
 
           <CardContent className="p-4 sm:p-5">
             <h3 className={`font-bold text-sm sm:text-base lg:text-lg leading-tight transition-colors mb-2 ${themeConfig?.text || 'text-gray-900'} tracking-tight`}>

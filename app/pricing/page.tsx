@@ -5,10 +5,16 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { QrCode } from "lucide-react"
 import { PaymentButton } from "@/components/payments/payment-button"
+import { CountrySelector } from "@/components/payments/country-selector"
+import { BillingPeriodToggle } from "@/components/payments/billing-period-toggle"
 import { useEffect, useState } from "react"
+import { SupportedCountry, getCountryConfig, getCountryPricing, BillingPeriod } from "@/lib/country-pricing"
+import { getCountryFromCookieClient } from "@/lib/country-utils"
 
 export default function PricingPage() {
   const [plans, setPlans] = useState<any[]>([])
+  const [selectedCountry, setSelectedCountry] = useState<SupportedCountry | null>(null)
+  const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>('monthly')
 
   useEffect(() => {
     // Fetch plans from database
@@ -35,6 +41,10 @@ export default function PricingPage() {
     }
 
     fetchPlans()
+    
+    // Initialize selected country from cookie
+    const countryFromCookie = getCountryFromCookieClient()
+    setSelectedCountry(countryFromCookie)
   }, [])
 
   return (
@@ -68,26 +78,54 @@ export default function PricingPage() {
           <p className="text-xl text-muted-foreground leading-relaxed">
             Choose the perfect plan for your restaurant. All plans include a 14-day free trial.
           </p>
+          
+          {/* Billing Period Toggle */}
+          <div className="flex flex-col items-center gap-4 pt-4">
+            <BillingPeriodToggle
+              period={billingPeriod}
+              onPeriodChange={setBillingPeriod}
+            />
+            
+            {/* Country Selector */}
+            {selectedCountry && (
+              <div className="flex flex-col items-center gap-2">
+                <p className="text-sm text-muted-foreground">View prices for:</p>
+                <CountrySelector
+                  value={selectedCountry}
+                  onValueChange={setSelectedCountry}
+                />
+              </div>
+            )}
+          </div>
         </div>
       </section>
 
       {/* Pricing Cards */}
       <section className="container mx-auto px-4 pb-20 max-w-7xl">
-        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-          {plans.map((plan, index) => (
-            <PaymentButton
-              key={plan.plan_id}
-              planId={plan.plan_id}
-              planName={plan.name}
-              price={plan.price}
-              currency={plan.currency}
-              features={plan.features || []}
-              limitations={plan.limitations || []}
-              isPopular={plan.is_popular}
-              isCurrentPlan={false}
-            />
-          ))}
-        </div>
+        {plans.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-muted-foreground">Loading pricing plans...</p>
+          </div>
+        ) : (
+          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            {plans.map((plan, index) => (
+              <PaymentButton
+                key={plan.plan_id}
+                planId={plan.plan_id}
+                planName={plan.name}
+                price={plan.price}
+                currency={plan.currency}
+                features={plan.features || []}
+                limitations={plan.limitations || []}
+                isPopular={plan.is_popular}
+                isCurrentPlan={false}
+                selectedCountry={selectedCountry || undefined}
+                billingPeriod={billingPeriod}
+                onBillingPeriodChange={setBillingPeriod}
+              />
+            ))}
+          </div>
+        )}
       </section>
 
       {/* FAQ Section */}

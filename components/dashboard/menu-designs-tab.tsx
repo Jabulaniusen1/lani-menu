@@ -2,12 +2,11 @@
 
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Palette, Grid3x3, List, LayoutGrid, Columns, Check, Loader2, Type } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Palette, Grid3x3, List, Check, Loader2, Type } from "lucide-react"
 import { getSupabaseBrowserClient } from "@/lib/supabase/client"
 import { useNotification } from "@/hooks/use-notification"
-import { LayoutPreview } from "./layout-preview"
 import { ThemePreview } from "./theme-preview"
 
 interface MenuDesignsTabProps {
@@ -243,27 +242,27 @@ export function MenuDesignsTab({
     }
   ]
 
+  // Get font display name
+  const getFontDisplayName = (fontId: string) => {
+    const font = fonts.find(f => f.id === fontId)
+    return font ? font.name : 'Inter'
+  }
+
   return (
     <div className="space-y-4 sm:space-y-6">
-      {/* Layout & Typography Selection - Combined */}
+      {/* Layout Selection */}
       <Card className="border-2">
-        <CardHeader className="bg-gradient-to-r from-green-50 to-teal-50 border-b p-3 sm:p-4 lg:p-5">
-          <CardTitle className="text-base sm:text-lg lg:text-xl flex items-center gap-2">
+        <CardHeader className="border-b p-4 sm:p-5">
+          <CardTitle className="text-base sm:text-lg flex items-center gap-2">
             <Grid3x3 className="h-4 w-4 sm:h-5 sm:w-5" />
-            Choose Your Menu Layout & Typography
+            Menu Layout
           </CardTitle>
           <CardDescription className="text-xs sm:text-sm mt-1">
-            Select how your menu items are displayed and choose a font style.
+            Choose how your menu items are displayed
           </CardDescription>
         </CardHeader>
-        <CardContent className="p-3 sm:p-4 lg:p-5 space-y-4 sm:space-y-5">
-          {/* Layout Selection */}
-          <div>
-            <h3 className="text-sm sm:text-base font-semibold mb-2 sm:mb-3 flex items-center gap-2">
-              <Grid3x3 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              Layout
-            </h3>
-            <div className="grid gap-2 sm:gap-3 grid-cols-1 sm:grid-cols-2">
+        <CardContent className="p-4 sm:p-5">
+          <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
             {layouts.map((layout) => {
               const Icon = layout.icon
               const isSelected = selectedLayout === layout.id
@@ -271,136 +270,116 @@ export function MenuDesignsTab({
               return (
                 <Card
                   key={layout.id}
-                  className={`cursor-pointer transition-all duration-300 active:scale-[0.98] sm:hover:shadow-lg sm:hover:scale-[1.02] border-2 touch-manipulation ${
+                  className={`cursor-pointer transition-all duration-300 hover:shadow-lg border-2 ${
                     isSelected 
                       ? 'ring-2 ring-orange-500 border-orange-500 shadow-md' 
-                      : 'border-gray-200 sm:hover:border-gray-300'
+                      : 'border-gray-200 hover:border-gray-300'
                   }`}
                   onClick={() => !loading && handleUpdate('layout', layout.id)}
                 >
-                  <CardContent className="p-2.5 sm:p-3">
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-2 min-w-0 flex-1">
-                          <div className={`p-1.5 sm:p-2 rounded-md transition-all flex-shrink-0 ${
-                            isSelected 
-                              ? 'bg-gradient-to-br from-orange-500 to-pink-500 text-white shadow-sm' 
-                              : 'bg-gradient-to-br from-gray-100 to-gray-200'
-                          }`}>
-                            <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <h3 className="font-bold text-xs sm:text-sm truncate">{layout.name}</h3>
-                            {layout.popular && (
-                              <Badge className="bg-orange-500 text-white text-[9px] sm:text-[10px] mt-0.5 px-1 py-0">
-                                ⭐ Popular
-                              </Badge>
-                            )}
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3">
+                      <div className={`p-2 rounded-lg transition-all ${
+                        isSelected 
+                          ? 'bg-orange-500 text-white' 
+                          : 'bg-gray-100'
+                      }`}>
+                        <Icon className="h-5 w-5" />
           </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-semibold text-sm">{layout.name}</h3>
+                          {layout.popular && (
+                            <Badge className="bg-orange-500 text-white text-xs">
+                              Popular
+                            </Badge>
+                          )}
+                          {isSelected && (
+                            <Check className="h-4 w-4 text-orange-500 ml-auto" />
+                          )}
         </div>
-                        {isSelected && (
-                          <div className="bg-orange-500 text-white rounded-full p-0.5 sm:p-1 shadow-sm flex-shrink-0">
-                            <Check className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-                          </div>
-                        )}
-                      </div>
-                      <p className="text-[10px] sm:text-xs text-muted-foreground line-clamp-1">
-                        {layout.description}
-                      </p>
-                      {/* Layout Preview - Compact */}
-                      <div className="border rounded-md p-1 bg-gradient-to-br from-gray-50 to-white">
-                        <LayoutPreview layout={layout.id as any} className="opacity-90" />
-                      </div>
-                      {loading === 'layout' && isSelected && (
-                        <div className="flex items-center justify-center pt-1">
-                          <Loader2 className="h-2.5 w-2.5 sm:h-3 sm:w-3 animate-spin text-orange-500" />
-            </div>
-                      )}
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {layout.description}
+        </p>
       </div>
+                    </div>
+                    {loading === 'layout' && isSelected && (
+                      <div className="flex items-center justify-center pt-2">
+                        <Loader2 className="h-4 w-4 animate-spin text-orange-500" />
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               )
             })}
-            </div>
           </div>
+        </CardContent>
+      </Card>
 
-          {/* Typography Selection */}
-          <div className="border-t pt-4 sm:pt-5">
-            <h3 className="text-sm sm:text-base font-semibold mb-2 sm:mb-3 flex items-center gap-2">
-              <Type className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              Typography
-            </h3>
-            <div className="grid gap-2 sm:gap-2.5 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-              {fonts.map((font) => {
-                const isSelected = selectedFont === font.id
-                const fontFamily = font.id === 'playfair' ? 'Playfair Display' :
-                                  font.id === 'opensans' ? 'Open Sans' :
-                                  font.id === 'dancingscript' ? 'Dancing Script' :
-                                  font.id === 'permanentmarker' ? 'Permanent Marker' :
-                                  font.id.charAt(0).toUpperCase() + font.id.slice(1)
-                
-                return (
-                  <Card
-                    key={font.id}
-                    className={`cursor-pointer transition-all duration-300 active:scale-[0.98] sm:hover:shadow-lg sm:hover:scale-[1.02] border-2 touch-manipulation ${
-                      isSelected 
-                        ? 'ring-2 ring-orange-500 border-orange-500 shadow-md' 
-                        : 'border-gray-200 sm:hover:border-gray-300'
-                    }`}
-                    onClick={() => !loading && handleUpdate('font', font.id)}
-                  >
-                    <CardContent className="p-2 sm:p-2.5">
-                      <div className="space-y-1.5 sm:space-y-2">
-                        <div className="flex items-center justify-between gap-1">
-                          <div className="min-w-0 flex-1">
-                            <h3 className="font-bold text-[10px] sm:text-xs truncate">{font.name}</h3>
-                          </div>
-                          {isSelected && (
-                            <div className="bg-orange-500 text-white rounded-full p-0.5 shadow-sm flex-shrink-0">
-                              <Check className="h-2 w-2 sm:h-2.5 sm:w-2.5" />
-                            </div>
-                          )}
-                        </div>
-                        
-                        {/* Font Preview - Compact */}
-                        <div className="space-y-1">
-                          <div 
-                            className="text-xs sm:text-sm font-semibold border rounded-md p-1.5 sm:p-2 bg-gradient-to-br from-gray-50 to-white text-center"
-                            style={{ fontFamily: fontFamily }}
-                          >
-                            {font.preview}
-                          </div>
-                        </div>
-
-                        {loading === 'font' && isSelected && (
-                          <div className="flex items-center justify-center pt-0.5">
-                            <Loader2 className="h-2.5 w-2.5 sm:h-3 sm:w-3 animate-spin text-orange-500" />
-                          </div>
+      {/* Typography Selection - Dropdown */}
+      <Card className="border-2">
+        <CardHeader className="border-b p-4 sm:p-5">
+          <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+            <Type className="h-4 w-4 sm:h-5 sm:w-5" />
+            Typography
+          </CardTitle>
+          <CardDescription className="text-xs sm:text-sm mt-1">
+            Choose a font style for your menu
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="p-4 sm:p-5">
+          <div className="space-y-2">
+            <Select
+              value={selectedFont}
+              onValueChange={(value) => !loading && handleUpdate('font', value)}
+              disabled={loading === 'font'}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue>
+                  <span style={{ fontFamily: getFontDisplayName(selectedFont) }}>
+                    {getFontDisplayName(selectedFont)}
+                  </span>
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {fonts.map((font) => {
+                  const fontFamily = font.id === 'playfair' ? 'Playfair Display' :
+                                    font.id === 'opensans' ? 'Open Sans' :
+                                    font.id === 'dancingscript' ? 'Dancing Script' :
+                                    font.id === 'permanentmarker' ? 'Permanent Marker' :
+                                    font.id.charAt(0).toUpperCase() + font.id.slice(1)
+                  
+                  return (
+                    <SelectItem key={font.id} value={font.id}>
+                      <div className="flex items-center gap-2">
+                        <span style={{ fontFamily: fontFamily }} className="text-sm">
+                          {font.name}
+                        </span>
+                        {loading === 'font' && selectedFont === font.id && (
+                          <Loader2 className="h-3 w-3 animate-spin text-orange-500 ml-auto" />
                         )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                )
-              })}
             </div>
+                    </SelectItem>
+                  )
+                })}
+              </SelectContent>
+            </Select>
           </div>
         </CardContent>
       </Card>
 
       {/* Theme Selection */}
       <Card className="border-2">
-        <CardHeader className="bg-gradient-to-r from-orange-50 to-pink-50 border-b p-4 sm:p-5 lg:p-6">
-          <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
-            <div className="p-1.5 sm:p-2 bg-gradient-to-br from-orange-500 to-pink-500 rounded-lg flex-shrink-0">
-              <Palette className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
-            </div>
-            <span>Color Theme</span>
+        <CardHeader className="border-b p-4 sm:p-5">
+          <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+            <Palette className="h-4 w-4 sm:h-5 sm:w-5" />
+            Color Theme
           </CardTitle>
-          <CardDescription className="text-sm sm:text-base mt-1 sm:mt-2">
-            Choose a color scheme that matches your restaurant's vibe. See how it looks with a live preview.
+          <CardDescription className="text-xs sm:text-sm mt-1">
+            Choose a color scheme that matches your restaurant's vibe
           </CardDescription>
         </CardHeader>
-        <CardContent className="p-3 sm:p-4 lg:p-6">
+        <CardContent className="p-4 sm:p-5">
           <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {themes.map((theme) => {
               const isSelected = selectedTheme === theme.id
@@ -415,30 +394,27 @@ export function MenuDesignsTab({
                   }`}
                   onClick={() => !loading && handleUpdate('theme', theme.id)}
                 >
-                  <CardContent className="p-3 sm:p-4 lg:p-5">
-                    <div className="space-y-3 sm:space-y-4">
-                      {/* Header with name and check */}
+                  <CardContent className="p-4">
+                    <div className="space-y-3">
                       <div className="flex items-center justify-between gap-2">
-                        <div className="min-w-0 flex-1">
-                          <h3 className="font-bold text-sm sm:text-base lg:text-lg truncate">{theme.name}</h3>
-                          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-sm">{theme.name}</h3>
+                          <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
                             {theme.description}
                           </p>
-                </div>
+                        </div>
                         {isSelected && (
-                          <div className="bg-orange-500 text-white rounded-full p-1 sm:p-1.5 shadow-md flex-shrink-0">
-                            <Check className="h-3 w-3 sm:h-4 sm:w-4" />
-        </div>
+                          <Check className="h-4 w-4 text-orange-500 flex-shrink-0" />
                         )}
-      </div>
+                      </div>
 
                       {/* Theme Preview */}
                       <ThemePreview theme={theme} />
                       
                       {loading === 'theme' && isSelected && (
-                        <div className="flex items-center justify-center pt-1 sm:pt-2">
-                          <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 animate-spin text-orange-500" />
-                  </div>
+                        <div className="flex items-center justify-center pt-1">
+                          <Loader2 className="h-4 w-4 animate-spin text-orange-500" />
+                        </div>
                       )}
                     </div>
                   </CardContent>

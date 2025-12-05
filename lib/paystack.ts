@@ -92,10 +92,17 @@ export class PaystackService {
   // Initialize transaction
   static async initializeTransaction(data: PaymentData) {
     try {
+      // Convert amount to smallest currency unit (kobo for NGN, cents for others)
+      // All supported currencies use 100 as the base (NGN=kobo, KES=cents, ZAR=cents, GHS=pesewas, EGP=piastres, UGX=cents)
+      const amountInSmallestUnit = Math.round(data.amount * 100)
+      
+      // Ensure currency is uppercase (Paystack requires uppercase currency codes)
+      const currency = data.currency.toUpperCase()
+      
       const transactionData: any = {
         email: data.email,
-        amount: data.amount * 100, // Convert to kobo
-        currency: data.currency,
+        amount: amountInSmallestUnit,
+        currency: currency,
         reference: data.reference,
         callback_url: data.callback_url,
         metadata: data.metadata
@@ -106,7 +113,21 @@ export class PaystackService {
         transactionData.plan = data.plan
       }
 
+      console.log('Initializing Paystack transaction:', {
+        currency,
+        amount: amountInSmallestUnit,
+        amountInMainUnit: data.amount,
+        email: data.email
+      })
+
       const response = await paystack.transaction.initialize(transactionData)
+      
+      console.log('Paystack response:', {
+        status: response.status,
+        currency: response.data?.currency,
+        amount: response.data?.amount
+      })
+      
       return response
     } catch (error) {
       console.error('Error initializing transaction:', error)

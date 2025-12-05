@@ -4,8 +4,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { CreditCard, Crown, Check, Star, Zap, Users, QrCode, Palette, Loader2 } from "lucide-react"
 import { PaymentButton } from "@/components/payments/payment-button"
+import { CountrySelector } from "@/components/payments/country-selector"
+import { BillingPeriodToggle } from "@/components/payments/billing-period-toggle"
 import { useSubscription } from "@/contexts/subscription-context"
 import { useEffect, useState } from "react"
+import { SupportedCountry, BillingPeriod } from "@/lib/country-pricing"
+import { getCountryFromCookieClient } from "@/lib/country-utils"
 
 interface BillingTabProps {
   currentPlan?: string
@@ -14,6 +18,8 @@ interface BillingTabProps {
 export function BillingTab({ currentPlan = "free" }: BillingTabProps) {
   const { subscription, loading, refreshSubscription } = useSubscription()
   const [plans, setPlans] = useState<any[]>([])
+  const [selectedCountry, setSelectedCountry] = useState<SupportedCountry | null>(null)
+  const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>('monthly')
 
   useEffect(() => {
     // Fetch plans from database
@@ -40,6 +46,10 @@ export function BillingTab({ currentPlan = "free" }: BillingTabProps) {
     }
 
     fetchPlans()
+    
+    // Initialize selected country from cookie
+    const countryFromCookie = getCountryFromCookieClient()
+    setSelectedCountry(countryFromCookie)
   }, [])
 
   // Handle payment success callback
@@ -160,7 +170,26 @@ export function BillingTab({ currentPlan = "free" }: BillingTabProps) {
 
       {/* Available Plans */}
       <div>
-        <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Choose Your Plan</h2>
+        <div className="flex flex-col gap-4 mb-4 sm:mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <h2 className="text-xl sm:text-2xl font-bold">Choose Your Plan</h2>
+            {selectedCountry && (
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">View prices for:</span>
+                <CountrySelector
+                  value={selectedCountry}
+                  onValueChange={setSelectedCountry}
+                />
+              </div>
+            )}
+          </div>
+          <div className="flex justify-center sm:justify-start">
+            <BillingPeriodToggle
+              period={billingPeriod}
+              onPeriodChange={setBillingPeriod}
+            />
+          </div>
+        </div>
         <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {plans.map((plan) => (
             <PaymentButton
@@ -174,6 +203,9 @@ export function BillingTab({ currentPlan = "free" }: BillingTabProps) {
               isPopular={plan.is_popular}
               isCurrentPlan={plan.plan_id === currentPlanId}
               onPaymentSuccess={refreshSubscription}
+              selectedCountry={selectedCountry || undefined}
+              billingPeriod={billingPeriod}
+              onBillingPeriodChange={setBillingPeriod}
             />
           ))}
         </div>

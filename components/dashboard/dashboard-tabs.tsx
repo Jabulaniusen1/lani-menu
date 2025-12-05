@@ -9,6 +9,7 @@ import { MenuDesignsTab } from "./menu-designs-tab"
 import { RestaurantsOverview } from "./restaurants-overview"
 import { MenuManager } from "./menu-manager"
 import { DashboardSidebar } from "./dashboard-sidebar"
+import { MobilePreviewPanel } from "./mobile-preview-panel"
 import { 
   Menu, 
   X, 
@@ -16,7 +17,8 @@ import {
   Building2, 
   User, 
   CreditCard, 
-  Palette 
+  Palette,
+  QrCode
 } from "lucide-react"
 
 interface Restaurant {
@@ -87,10 +89,10 @@ export function DashboardTabs({
             <div className="p-4 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 bg-blue-600 rounded-lg flex items-center justify-center">
-                    <Building2 className="h-3 w-3 text-white" />
+                  <div className="bg-primary p-2 rounded-lg">
+                    <QrCode className="w-5 h-5 text-primary-foreground" />
                   </div>
-                  <h1 className="text-base font-semibold text-gray-900">Lani Menu</h1>
+                  <h1 className="text-base font-bold text-gray-900 hover:text-primary transition-colors duration-300">Lanimenu</h1>
                 </div>
                 <Button
                   variant="ghost"
@@ -128,8 +130,11 @@ export function DashboardTabs({
         </div>
       )}
 
+      {/* Mobile Preview Panel - Desktop Only */}
+      <MobilePreviewPanel restaurant={restaurant} />
+
       {/* Scrollable Content Area */}
-      <div className="flex-1 lg:ml-64 overflow-y-auto">
+      <div className="flex-1 lg:ml-64 xl:mr-[400px] overflow-y-auto">
         {/* Mobile Header */}
         <div className="lg:hidden border-b bg-background sticky top-0 z-40">
           <div className="flex items-center justify-between p-4">

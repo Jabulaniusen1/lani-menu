@@ -24,7 +24,8 @@ import {
   Palette,
   Utensils,
   Settings,
-  Plus
+  Plus,
+  QrCode
 } from "lucide-react"
 
 interface Restaurant {
@@ -85,19 +86,19 @@ export function DashboardSidebar({
       {/* Header Section */}
       <div className="p-4 lg:p-6 border-b border-gray-200">
         <div className="flex items-center gap-2 lg:gap-3 mb-4">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 lg:w-8 lg:h-8 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
-              <Building2 className="h-3 w-3 lg:h-5 lg:w-5 text-white" />
+          <div className="flex items-center gap-3">
+            <div className="bg-primary p-2 rounded-lg hover:scale-110 transition-transform duration-300 flex-shrink-0">
+              <QrCode className="w-5 h-5 lg:w-6 lg:h-6 text-primary-foreground" />
+            </div>
+            <div className="min-w-0">
+              <h1 className="text-base lg:text-lg font-bold text-gray-900 truncate hover:text-primary transition-colors duration-300">Lanimenu</h1>
+              <p className="text-xs text-gray-500">Dashboard</p>
             </div>
             {isPro && (
-              <Badge className="bg-orange-500 text-white text-xs px-1.5 py-0.5">
+              <Badge className="bg-orange-500 text-white text-xs px-1.5 py-0.5 ml-auto">
                 PRO
               </Badge>
             )}
-          </div>
-          <div className="min-w-0">
-            <h1 className="text-base lg:text-lg font-semibold text-gray-900 truncate">Lani Menu</h1>
-            <p className="text-xs text-gray-500">Dashboard</p>
           </div>
         </div>
 

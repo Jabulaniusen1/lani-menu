@@ -112,7 +112,7 @@ export default async function MenuPage({ params }: MenuPageProps) {
   if (menuType === 'pdf' && restaurant.pdf_menu_url) {
     redirect(restaurant.pdf_menu_url)
   }
-  
+
   // If menu_type is 'items' (or null/undefined), show individual items menu
   // Even if pdf_menu_url exists, respect the menu_type setting
 

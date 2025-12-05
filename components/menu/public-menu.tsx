@@ -1,12 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Search, UtensilsCrossed, X, Filter, Star, Clock, DollarSign, Flame, ChefHat, Phone, Globe } from "lucide-react"
+import { Search, UtensilsCrossed, X, Star, Clock, DollarSign, Flame, ChefHat, Phone, Globe } from "lucide-react"
 import { formatPrice } from "@/lib/currency"
 import { GridLayout, ListLayout } from "./menu-layouts"
 import { menuThemes, menuFonts } from "@/lib/menu-themes"
@@ -49,7 +49,8 @@ export function PublicMenu({ restaurant, menuItems }: PublicMenuProps) {
   const [priceFilter] = useState<string>("all")
   const [sortBy, setSortBy] = useState<string>("name")
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null)
-  const [showFilters, setShowFilters] = useState(false)
+  const [isScrolled, setIsScrolled] = useState(false)
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
 
   // Clear all filters
   const clearFilters = () => {
@@ -102,6 +103,19 @@ export function PublicMenu({ restaurant, menuItems }: PublicMenuProps) {
   const themeConfig = menuThemes[theme] || menuThemes.default
   const fontConfig = menuFonts[font] || menuFonts.inter
 
+  // Scroll detection for grid layout logo shrinking
+  useEffect(() => {
+    if (layout !== 'grid') return
+
+    const handleScroll = () => {
+      const scrollY = window.scrollY || document.documentElement.scrollTop
+      setIsScrolled(scrollY > 50)
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [layout])
+
   const renderLayout = (items: typeof filteredItems) => {
     const LayoutComponent = 
       layout === 'list' ? ListLayout :
@@ -142,9 +156,9 @@ export function PublicMenu({ restaurant, menuItems }: PublicMenuProps) {
         } as React.CSSProperties}
       ></div>
       
-      {/* Header - Premium styling */}
-      <header className={`${themeConfig.card} ${themeConfig.border} border-b top-0 z-10 backdrop-blur-md relative shadow-sm`}>
-        <div className={`container mx-auto ${layout === 'list' ? 'px-3 sm:px-4 py-3 sm:py-4' : 'px-4 py-6'} max-w-6xl`}>
+      {/* Header - Premium styling with glass effect */}
+      <header className={`sticky top-0 z-50 ${themeConfig.card} ${themeConfig.border} border-b backdrop-blur-lg bg-opacity-90 transition-all duration-300 ${layout === 'grid' && isScrolled ? 'py-2' : ''}`}>
+        <div className={`container mx-auto ${layout === 'list' ? 'px-3 sm:px-4 py-3 sm:py-4' : isScrolled ? 'px-4 py-2' : 'px-4 py-6'} max-w-6xl transition-all duration-300`}>
           {layout === 'list' ? (
             // Compact header for list layout - horizontal layout
             <div className="flex items-center gap-3">
@@ -152,10 +166,10 @@ export function PublicMenu({ restaurant, menuItems }: PublicMenuProps) {
                 <img
                   src={restaurant.logo_url}
                   alt={`${restaurant.name} logo`}
-                  className="w-10 h-10 sm:w-12 sm:h-12 object-contain rounded-xl flex-shrink-0 shadow-md ring-2 ring-white/50"
+                  className="w-10 h-10 sm:w-12 sm:h-12 object-contain rounded-xl flex-shrink-0 ring-2 ring-white/50"
                 />
               ) : (
-                <div className="bg-gradient-to-br from-primary to-primary/80 p-1.5 sm:p-2 rounded-xl flex-shrink-0 shadow-md">
+                <div className="bg-gradient-to-br from-primary to-primary/80 p-1.5 sm:p-2 rounded-xl flex-shrink-0">
                   <UtensilsCrossed className="w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground" />
                 </div>
               )}
@@ -167,33 +181,59 @@ export function PublicMenu({ restaurant, menuItems }: PublicMenuProps) {
               </div>
             </div>
           ) : (
-            // Centered header for other layouts
-          <div className="text-center space-y-2">
-            <div className="flex items-center justify-center gap-3 mb-3">
+            // Centered header for grid layout - shrinks on scroll
+          <div className={`text-center transition-all duration-300 ${isScrolled ? 'space-y-1' : 'space-y-2'}`}>
+            <div className={`flex items-center justify-center gap-3 transition-all duration-300 ${isScrolled ? 'mb-1' : 'mb-3'}`}>
               {restaurant.logo_url ? (
                 <img
                   src={restaurant.logo_url}
                   alt={`${restaurant.name} logo`}
-                  className="w-14 h-14 sm:w-16 sm:h-16 object-contain rounded-2xl shadow-lg ring-2 ring-white/50"
+                  className={`object-contain rounded-2xl ring-2 ring-white/50 transition-all duration-300 ${
+                    isScrolled 
+                      ? 'w-8 h-8 sm:w-10 sm:h-10' 
+                      : 'w-14 h-14 sm:w-16 sm:h-16'
+                  }`}
                 />
               ) : (
-                <div className="bg-gradient-to-br from-primary to-primary/80 p-2.5 sm:p-3 rounded-2xl shadow-lg">
-                  <UtensilsCrossed className="w-6 h-6 sm:w-7 sm:h-7 text-primary-foreground" />
+                <div className={`bg-gradient-to-br from-primary to-primary/80 rounded-2xl transition-all duration-300 ${
+                  isScrolled 
+                    ? 'p-1.5 sm:p-2' 
+                    : 'p-2.5 sm:p-3'
+                }`}>
+                  <UtensilsCrossed className={`text-primary-foreground transition-all duration-300 ${
+                    isScrolled 
+                      ? 'w-4 h-4 sm:w-5 sm:h-5' 
+                      : 'w-6 h-6 sm:w-7 sm:h-7'
+                  }`} />
                 </div>
               )}
             </div>
-              <h1 className={`text-2xl sm:text-3xl lg:text-4xl font-bold text-balance ${themeConfig.text} tracking-tight`}>{restaurant.name}</h1>
-            {restaurant.description && (
-                <p className={`text-sm sm:text-base ${themeConfig.text} opacity-75 leading-relaxed font-medium max-w-2xl mx-auto mt-2`}>{restaurant.description}</p>
+              <h1 className={`font-bold text-balance ${themeConfig.text} tracking-tight transition-all duration-300 ${
+                isScrolled 
+                  ? 'text-lg sm:text-xl lg:text-2xl' 
+                  : 'text-2xl sm:text-3xl lg:text-4xl'
+              }`}>{restaurant.name}</h1>
+            {restaurant.description && !isScrolled && (
+                <p className={`text-sm sm:text-base ${themeConfig.text} opacity-75 leading-relaxed font-medium max-w-2xl mx-auto mt-2 transition-all duration-300`}>{restaurant.description}</p>
             )}
           </div>
           )}
         </div>
       </header>
 
-      {/* Search and Filters - Compact for list layout */}
-      <div className={`container mx-auto ${layout === 'list' ? 'px-3 sm:px-4 py-3 sm:py-4' : 'px-4 py-6'} max-w-6xl relative z-10`}>
-        <div className={layout === 'list' ? 'space-y-2 sm:space-y-3' : 'space-y-4'}>
+      {/* Search and Filters - Sticky with glass effect */}
+      <div 
+        className={`sticky z-40 backdrop-blur-lg bg-opacity-90 ${themeConfig.card} border-b ${themeConfig.border} transition-all duration-300`} 
+        style={{ 
+          top: layout === 'list' 
+            ? '73px' 
+            : layout === 'grid' && isScrolled 
+              ? '60px' 
+              : '120px' 
+        }}
+      >
+        <div className={`container mx-auto ${layout === 'list' ? 'px-3 sm:px-4 py-3 sm:py-4' : 'px-4 py-6'} max-w-6xl`}>
+          <div className={layout === 'list' ? 'space-y-2 sm:space-y-3' : 'space-y-4'}>
           {/* Search Bar - Premium styling */}
           <div className="relative">
             <Search className={`absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 ${layout === 'list' ? 'w-4 h-4' : 'w-5 h-5'} ${themeConfig.text} opacity-50 z-10`} />
@@ -202,7 +242,7 @@ export function PublicMenu({ restaurant, menuItems }: PublicMenuProps) {
               placeholder="Search menu items..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className={`${layout === 'list' ? 'pl-9 h-9 sm:h-10 text-sm' : 'pl-11 h-12 text-base'} ${themeConfig.input} ${themeConfig.inputBorder} ${themeConfig.text} placeholder:opacity-50 shadow-sm border-2 rounded-xl focus:shadow-md transition-all duration-200`}
+              className={`${layout === 'list' ? 'pl-9 h-9 sm:h-10 text-sm' : 'pl-11 h-12 text-base'} ${themeConfig.input} ${themeConfig.inputBorder} ${themeConfig.text} placeholder:opacity-50 border-2 rounded-xl transition-all duration-200`}
             />
           </div>
 
@@ -215,8 +255,8 @@ export function PublicMenu({ restaurant, menuItems }: PublicMenuProps) {
                 onClick={() => setSelectedCategory("all")}
                 className={`capitalize font-semibold transition-all duration-200 ${layout === 'list' ? 'text-xs h-7 px-2.5' : 'px-4'} ${
                   selectedCategory === "all" 
-                    ? `${themeConfig.button} ${themeConfig.buttonText} shadow-md hover:shadow-lg` 
-                    : `${themeConfig.border} ${themeConfig.text} hover:shadow-sm`
+                    ? `${themeConfig.button} ${themeConfig.buttonText}` 
+                    : `${themeConfig.border} ${theme === 'dark' ? 'text-gray-900 bg-white' : themeConfig.text}`
                 } rounded-lg`}
               >
                 All Items
@@ -230,7 +270,7 @@ export function PublicMenu({ restaurant, menuItems }: PublicMenuProps) {
                   className={`capitalize font-semibold transition-all duration-200 ${layout === 'list' ? 'text-xs h-7 px-2.5' : 'px-4'} ${
                     selectedCategory === category 
                       ? `${themeConfig.button} ${themeConfig.buttonText} shadow-md hover:shadow-lg` 
-                      : `${themeConfig.border} ${themeConfig.text} hover:shadow-sm`
+                      : `${themeConfig.border} ${theme === 'dark' ? 'text-gray-900 bg-white' : themeConfig.text} hover:shadow-sm`
                   } rounded-lg`}
                 >
                   {category}
@@ -239,19 +279,8 @@ export function PublicMenu({ restaurant, menuItems }: PublicMenuProps) {
             </div>
 
             {/* Additional Filter Controls - Compact for list layout */}
-            <div className={`flex flex-wrap ${layout === 'list' ? 'gap-1.5' : 'gap-2'} items-center`}>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowFilters(!showFilters)}
-                className={`gap-1.5 sm:gap-2 ${layout === 'list' ? 'text-xs h-7 px-2' : ''} ${themeConfig.border} ${themeConfig.text}`}
-              >
-                <Filter className={layout === 'list' ? 'w-3 h-3' : 'w-4 h-4'} />
-                <span className={layout === 'list' ? 'hidden sm:inline' : ''}>Sort</span>
-                {layout !== 'list' && <span>Options</span>}
-              </Button>
-              
-              {(searchQuery || selectedCategory !== "all" || sortBy !== "name") && (
+            {(searchQuery || selectedCategory !== "all") && (
+              <div className={`flex flex-wrap ${layout === 'list' ? 'gap-1.5' : 'gap-2'} items-center`}>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -260,59 +289,6 @@ export function PublicMenu({ restaurant, menuItems }: PublicMenuProps) {
                 >
                   <X className={layout === 'list' ? 'w-3 h-3' : 'w-4 h-4'} />
                   <span className={layout === 'list' ? 'hidden sm:inline' : ''}>Clear</span>
-                </Button>
-              )}
-              
-              {showFilters && (
-                <div className={`flex flex-wrap ${layout === 'list' ? 'gap-1.5' : 'gap-2'} items-center w-full`}>
-                  <span className={`${layout === 'list' ? 'text-xs' : 'text-sm'} font-medium ${themeConfig.text} opacity-70 mr-1 sm:mr-2`}>Sort:</span>
-                  <Button
-                    variant={sortBy === "name" ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setSortBy("name")}
-                    className={`${layout === 'list' ? 'text-xs h-7 px-2' : ''} ${
-                      sortBy === "name" 
-                        ? `${themeConfig.button} ${themeConfig.buttonText}` 
-                        : `${themeConfig.border} ${themeConfig.text}`
-                    }`}
-                  >
-                    Name
-                  </Button>
-                  <Button
-                    variant={sortBy === "price-low" ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setSortBy("price-low")}
-                    className={`${layout === 'list' ? 'text-xs h-7 px-2' : ''} ${
-                      sortBy === "price-low" 
-                        ? `${themeConfig.button} ${themeConfig.buttonText}` 
-                        : `${themeConfig.border} ${themeConfig.text}`
-                    }`}
-                  >
-                    {layout === 'list' ? 'Low' : 'Price: Low to High'}
-                  </Button>
-                  <Button
-                    variant={sortBy === "price-high" ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setSortBy("price-high")}
-                    className={`${layout === 'list' ? 'text-xs h-7 px-2' : ''} ${
-                      sortBy === "price-high" 
-                        ? `${themeConfig.button} ${themeConfig.buttonText}` 
-                        : `${themeConfig.border} ${themeConfig.text}`
-                    }`}
-                  >
-                    {layout === 'list' ? 'High' : 'Price: High to Low'}
-                  </Button>
-                  <Button
-                    variant={sortBy === "popular" ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setSortBy("popular")}
-                    className={`${layout === 'list' ? 'text-xs h-7 px-2' : ''} ${
-                      sortBy === "popular" 
-                        ? `${themeConfig.button} ${themeConfig.buttonText}` 
-                        : `${themeConfig.border} ${themeConfig.text}`
-                    }`}
-                  >
-                    {layout === 'list' ? 'Popular' : 'Most Popular'}
                   </Button>
                 </div>
               )}
@@ -338,7 +314,7 @@ export function PublicMenu({ restaurant, menuItems }: PublicMenuProps) {
                 {layout !== 'list' && (
                   <div className="flex items-center gap-3 mb-1">
                     <h2 className={`text-xl sm:text-2xl lg:text-3xl font-bold capitalize ${themeConfig.text} tracking-tight`}>{category}</h2>
-                    <Badge className={`${themeConfig.primary} text-white shadow-md px-2.5 py-0.5 text-xs sm:text-sm font-semibold`}>{groupedItems[category]?.length || 0}</Badge>
+                    <Badge className={`${themeConfig.primary} text-white px-2.5 py-0.5 text-xs sm:text-sm font-semibold`}>{groupedItems[category]?.length || 0}</Badge>
                           </div>
                         )}
                         
@@ -351,7 +327,7 @@ export function PublicMenu({ restaurant, menuItems }: PublicMenuProps) {
 
       {/* Item Detail Modal - Premium styling */}
       <Dialog open={!!selectedItem} onOpenChange={() => setSelectedItem(null)}>
-        <DialogContent className={`max-w-2xl ${themeConfig.modal} ${themeConfig.modalBorder} ${themeConfig.text} rounded-2xl shadow-2xl border-2`}>
+        <DialogContent className={`max-w-2xl ${themeConfig.modal} ${themeConfig.modalBorder} ${themeConfig.text} rounded-2xl border-2`}>
           <DialogHeader>
             <DialogTitle className={`text-2xl sm:text-3xl font-bold ${themeConfig.text} tracking-tight`}>{selectedItem?.name}</DialogTitle>
           </DialogHeader>
@@ -359,7 +335,7 @@ export function PublicMenu({ restaurant, menuItems }: PublicMenuProps) {
           {selectedItem && (
             <div className="space-y-4">
               {selectedItem.image_url && (
-                <div className="aspect-video overflow-hidden rounded-xl shadow-lg relative">
+                <div className="aspect-video overflow-hidden rounded-xl relative">
                   <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent z-10"></div>
                   <img
                     src={selectedItem.image_url}
@@ -376,13 +352,13 @@ export function PublicMenu({ restaurant, menuItems }: PublicMenuProps) {
                   </div>
                   <div className="flex gap-2">
                     {selectedItem.is_popular && (
-                      <Badge className={`${themeConfig.badge} ${themeConfig.badgeText} shadow-md font-semibold`}>
+                      <Badge className={`${themeConfig.badge} ${themeConfig.badgeText} font-semibold`}>
                         <Star className="w-3 h-3 mr-1 fill-current" />
                         Popular
                       </Badge>
                     )}
                     {selectedItem.is_spicy && (
-                      <Badge className="bg-gradient-to-r from-red-500 to-red-600 text-white shadow-md font-semibold">
+                      <Badge className="bg-gradient-to-r from-red-500 to-red-600 text-white font-semibold">
                         <Flame className="w-3 h-3 mr-1 fill-current" />
                         Spicy
                       </Badge>

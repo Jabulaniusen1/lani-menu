@@ -40,9 +40,17 @@ export function DashboardHeader({ user, restaurant }: DashboardHeaderProps) {
                 </Badge>
               )}
             </div>
-            <div className="min-w-0 flex-1">
-              <h1 className="text-lg sm:text-xl font-bold truncate">{restaurant?.name || "Lani Menu"}</h1>
-              <p className="text-xs sm:text-sm text-muted-foreground truncate">{user.email}</p>
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <div className="bg-primary p-2 rounded-lg hover:scale-110 transition-transform duration-300">
+                  <QrCode className="w-5 h-5 text-primary-foreground" />
+                </div>
+                <span className="text-xl font-bold hover:text-primary transition-colors duration-300 hidden sm:inline">Lanimenu</span>
+              </div>
+              <div className="min-w-0 flex-1">
+                <h1 className="text-lg sm:text-xl font-bold truncate">{restaurant?.name || "Dashboard"}</h1>
+                <p className="text-xs sm:text-sm text-muted-foreground truncate">{user.email}</p>
+              </div>
             </div>
           </div>
 

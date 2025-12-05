@@ -105,10 +105,10 @@ export function MenuTypeSwitcher({ restaurant, onMenuTypeChange, displayMode, on
 
       if (error) throw error
 
-      notify.success(
-        'Menu type updated',
+          notify.success(
+            'Menu type updated',
         `Switched to ${newType === 'items' ? 'individual menu items' : 'uploaded menu'}. The preview page will now show ${newType === 'items' ? 'your individual menu items' : 'your uploaded PDF menu'}.`
-      )
+          )
 
       // Refresh restaurant data to ensure UI is in sync
       onMenuTypeChange()
@@ -192,7 +192,7 @@ export function MenuTypeSwitcher({ restaurant, onMenuTypeChange, displayMode, on
                     <div>
                       <div className="font-medium">Individual Items</div>
                       <div className="text-xs text-muted-foreground">Add menu items one by one</div>
-                    </div>
+                </div>
                   </div>
                 </SelectItem>
                 <SelectItem value="pdf">
@@ -201,7 +201,7 @@ export function MenuTypeSwitcher({ restaurant, onMenuTypeChange, displayMode, on
                     <div>
                       <div className="font-medium">Uploaded Menu</div>
                       <div className="text-xs text-muted-foreground">Upload your existing menu PDF</div>
-                    </div>
+                </div>
                   </div>
                 </SelectItem>
               </SelectContent>
